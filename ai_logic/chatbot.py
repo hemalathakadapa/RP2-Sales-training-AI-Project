@@ -76,3 +76,5 @@ def get_response(user_message, history=None):
         return "Does Cybersecurity need programming knowledge?"
 
     return random.choice(responses)
+def chatbot_response(message):
+    return get_response(message)
