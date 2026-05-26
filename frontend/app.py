@@ -28,7 +28,7 @@ from services.api_client import (
     get_final_feedback
 )
 
-from frontend.persona_config import (
+from persona_config import (
     PERSONAS,
     COURSES
 )
