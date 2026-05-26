@@ -1,9 +1,9 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
-from routes.chat_routes import router as chat_router
-from routes.feedback_routes import router as feedback_router
-from routes.voice_routes import router as voice_router
+from chat_routes import router as chat_router
+from feedback_routes import router as feedback_router
+from voice_routes import router as voice_router
 from database import create_tables
 
 @asynccontextmanager
