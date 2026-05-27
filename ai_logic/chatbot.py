@@ -52,11 +52,11 @@ def detect_persona(message):
     return "confused_student"
 
 
-def get_response(user_message, history=None):
+def get_response(user_message, persona =None, session_id=None, course= None, history=None):
 
-    persona = detect_persona(user_message)
+    detected = detect_persona(user_message)
 
-    responses = student_personas[persona]
+    responses = student_personas[detected]
 
     # dynamic reactions
 
