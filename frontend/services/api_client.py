@@ -1,58 +1,74 @@
 import os
-from groq import Groq
-
+import requests
 from dotenv import load_dotenv
 
-# .env ఫైల్ నుండి కీ ని లోడ్ చేస్తుంది
 load_dotenv()
 
-# కోడ్ లో కీ ని నేరుగా రాయకుండా ఇలా పిలుచుకో
-api_key = os.getenv("GROQ_API_KEY")
+# ✅ Call your Render backend — not Groq directly
+BASE_URL = os.getenv("API_URL", "https://ai-student-simulator-for-training-sales.onrender.com")
 
+def get_ai_response(message: str, persona: str, course: str, session_id: str = ""):
+    try:
+        response = requests.post(
+            f"{BASE_URL}/chat/",
+            json={
+                "message":    message,
+                "persona":    persona,
+                "course":     course,
+                "session_id": session_id
+            },
+            timeout=30
+        )
+        return response.json()
+    except Exception as e:
+        return {"error": str(e), "response": "Backend connection failed"}
 
-
-api_key = os.getenv("GROQ_API_KEY")
-
-def get_ai_response(message: str, combined_info: dict, history: str):
-    persona = combined_info.get("name", "Beginner")
-    course = combined_info.get("course", "Data Science")
-    
-    system_prompt = f"""
-  
-    You are a prospective student interested in {course}. 
-YOU ARE NOT A SALESPERSON. YOU ARE THE CUSTOMER.
-- Your Goal: You want to learn {course}, but you are hesitant about the price and want to be convinced.
-- Your Tone: Skeptical, curious, and price-sensitive. 
-- Rules: 
-    1. NEVER sell the course back to the user. 
-    2. ALWAYS ask questions like: "Is it worth the money?", "Can I get a better discount?", "How can I trust your placement support?".
-    3. Be the "Interested Student" who needs that final push to pay.
-"""
-    
-    
-    completion = client.chat.completions.create(
-        model="llama-3.1-8b-instant",
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": f"Previous conversation:\n{history}\n\nNew Message: {message}"}
-        ],
-        temperature=0.7
-    )
-    return completion.choices[0].message.content
+def get_evaluation(session_id: str, mode: str = "full"):
+    try:
+        response = requests.get(
+            f"{BASE_URL}/feedback/evaluate/{session_id}",
+            params={"mode": mode},
+            timeout=30
+        )
+        return response.json()
+    except Exception as e:
+        return {"error": str(e)}
 
 def get_final_feedback(conversation_history: str):
-    """సెషన్ ముగిశాక ఫైనల్ రిపోర్ట్ కోసం """
-    system_prompt = """
-    You are an expert Sales Manager. Analyze the following conversation between a Salesperson and a Prospective Student.
-    Provide:
-    1. Overall Score (1-10) [cite: 21]
-    2. Strengths of the salesperson.
-    3. Areas of improvement regarding communication, clarity, and handling objections[cite: 21].
-    4. Final verdict on conversion readiness.
-    """
-    completion = client.chat.completions.create(
-        model="llama-3.1-8b-instant",
-        messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": conversation_history}],
-        temperature=0.7
-    )
-    return completion.choices[0].message.content
+    return {"error": "Use get_evaluation instead"}
+
+def reset_conversation(session_id: str):
+    try:
+        response = requests.post(
+            f"{BASE_URL}/reset",
+            params={"session_id": session_id},
+            timeout=10
+        )
+        return response.json()
+    except Exception as e:
+        return {"error": str(e)}
+
+def get_all_sessions():
+    try:
+        response = requests.get(f"{BASE_URL}/feedback/sessions", timeout=10)
+        return response.json().get("sessions", [])
+    except Exception as e:
+        return []
+
+def get_session_conversation(session_id: str):
+    try:
+        response = requests.get(f"{BASE_URL}/chat/history/{session_id}", timeout=10)
+        return response.json().get("history", [])
+    except Exception as e:
+        return []
+
+def rename_chat_session(session_id: str, title: str):
+    try:
+        response = requests.put(
+            f"{BASE_URL}/session/rename/{session_id}",
+            json={"title": title},
+            timeout=10
+        )
+        return response.json()
+    except Exception as e:
+        return {"error": str(e)}
