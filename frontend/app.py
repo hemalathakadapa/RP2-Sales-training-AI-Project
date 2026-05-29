@@ -140,7 +140,14 @@ def autoplay_audio(text):
         with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as fp:
             tts.save(fp.name)
         audio_bytes = open(fp.name, "rb").read()
-        st.audio(audio_bytes, format="audio/mp3")
+        # Convert to base64 and use HTML autoplay
+        audio_b64 = base64.b64encode(audio_bytes).decode()
+        audio_html = f"""
+            <audio autoplay>
+                <source src="data:audio/mp3;base64,{audio_b64}" type="audio/mp3">
+            </audio>
+        """
+        st.markdown(audio_html, unsafe_allow_html=True)
     except Exception as e:
         st.error(f"AI Voice Error: {e}")
 
