@@ -23,15 +23,24 @@ from streamlit_mic_recorder import speech_to_text
 # =========================================================
 # 3. LOCAL PROJECT IMPORTS (NOW THEY WILL WORK PERFECTLY)
 # =========================================================
-from services.api_client import (
-    get_ai_response,
-    get_final_feedback
-)
+import importlib.util, os
 
-from persona_config import (
-    PERSONAS,
-    COURSES
-)
+_api_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "services", "api_client.py")
+_spec = importlib.util.spec_from_file_location("api_client", _api_path)
+_mod = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(_mod)
+
+get_ai_response = _mod.get_ai_response
+get_final_feedback = _mod.get_final_feedback
+
+_pc_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "persona_config.py")
+_spec2 = importlib.util.spec_from_file_location("persona_config", _pc_path)
+_mod2 = importlib.util.module_from_spec(_spec2)
+_spec2.loader.exec_module(_mod2)
+
+PERSONAS = _mod2.PERSONAS
+COURSES = _mod2.COURSES
+
 
 # =========================================================
 # PAGE CONFIG
