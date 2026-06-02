@@ -13,7 +13,6 @@ import json
 import tempfile
 import datetime
 import base64
-from services.api_client import ( get_ai_response, get_evaluation, reset_conversation, get_all_sessions, get_session_conversation, rename_chat_session)
 from persona_config import PERSONAS, COURSES
 from gtts import gTTS
 from streamlit_mic_recorder import speech_to_text
@@ -27,6 +26,10 @@ _spec.loader.exec_module(_mod)
 
 get_ai_response = _mod.get_ai_response
 get_evaluation = _mod.get_evaluation
+reset_conversation = _mod.reset_conversation
+get_all_sessions = _mod.get_all_sessions
+get_session_conversation = _mod.get_session_conversation
+rename_chat_session = _mod.rename_chat_session
 
 _pc_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "persona_config.py")
 _spec2 = importlib.util.spec_from_file_location("persona_config", _pc_path)
