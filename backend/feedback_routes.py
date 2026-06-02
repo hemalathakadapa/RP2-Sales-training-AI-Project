@@ -1,4 +1,5 @@
 from fastapi import APIRouter
+import asyncio
 
 router = APIRouter()
 
@@ -14,7 +15,7 @@ def get_sessions():
         return {"error": "Could not fetch sessions"}
 
 @router.get("/evaluate/{session_id}")       # ✅ session_id in URL
-def evaluate(session_id: str, mode: str = "recent"):
+async def evaluate(session_id: str, mode: str = "recent"):
     
     try:
         from database import get_conversation, save_feedback
@@ -36,7 +37,12 @@ def evaluate(session_id: str, mode: str = "recent"):
             return {"error": "No conversation found for this session"}
 
         # ✅ Evaluate — result is already a dict
-        result = evaluate_conversation(history, mode=mode)
+        result = await asyncio.wait_for(
+            asyncio.get_event_loop().run_in_executor(
+                None, evaluate_conversation, history, mode
+            ),
+            timeout=25.0  # Render free tier limit is ~30s
+        )
 
         # ✅ Save feedback to database
         save_feedback(
@@ -52,6 +58,11 @@ def evaluate(session_id: str, mode: str = "recent"):
             "session_id": session_id,
             "mode":       mode,
             "result":     result
+        }
+    except asyncio.TimeoutError:
+        print("Evaluate Timeout: LLM took too long")
+        return {
+            "error": "Evaluation timed out. Try mode=recent instead of mode=full"
         }
 
     except Exception as e:
