@@ -1,90 +1,51 @@
-import os
 import requests
-from dotenv import load_dotenv
 
-load_dotenv()
+BACKEND_URL = "https://ai-student-simulator-for-training-sales.onrender.com"
 
-# ✅ Call your Render backend — not Groq directly
-BASE_URL = os.getenv(
-    "API_URL",
-    "https://ai-student-simulator-for-training-sales.onrender.com"
-)
+def get_ai_response(message: str, persona: str, course: str, session_id: str = "") -> dict:
+    payload = {
+        "message":    message,
+        "persona":    persona,
+        "course":     course,
+        "session_id": session_id
+    }
+    response = requests.post(f"{BACKEND_URL}/chat/", json=payload)
+    response.raise_for_status()
+    return response.json()
 
-def get_ai_response(message: str, persona: str, course: str, session_id: str = ""):
-    try:
-        response = requests.post(
-            f"{BASE_URL}/chat/",
-            json={
-                "message": message,
-                "persona": persona["name"] if isinstance(persona, dict) else {"name": persona, "behavior": "", "difficulty": ""},
-                "course": course,
-                "session_id": session_id
-            },
-            timeout=120
-        )
-        data = response.json()
-        return data.get("response", data.get("error", "No response"))
+def get_evaluation(session_id: str, mode: str = "recent") -> dict:
+    """Get AI evaluation/feedback for a session"""
+    response = requests.get(f"{BACKEND_URL}/feedback/evaluate/{session_id}", params={"mode": mode})
+    response.raise_for_status()
+    return response.json()
 
-    except Exception as e:
-        return f"Backend connection failed: {e}" 
-
-def get_evaluation(session_id: str, mode: str = "full"):
-    try:
-        response = requests.get(
-            f"{BASE_URL}/feedback/evaluate/{session_id}",
-            params={"mode": mode},
-            timeout=120
-        )
-        return response.json()
-
-    except Exception as e:
-        return {"error": str(e)}
-
-def get_final_feedback(conversation_history: str):
-    return {"error": "Use get_evaluation instead"}
-
-def reset_conversation(session_id: str):
-    try:
-        response = requests.post(
-            f"{BASE_URL}/reset",
-            params={"session_id": session_id},
-            timeout=10
-        )
-        return response.json()
-
-    except Exception as e:
-        return {"error": str(e)}
-
-def get_all_sessions():
-    try:
-        response = requests.get(
-            f"{BASE_URL}/feedback/sessions",
-            timeout=10
-        )
-        return response.json().get("sessions", [])
-
-    except Exception as e:
-        return []
-
-def get_session_conversation(session_id: str):
-    try:
-        response = requests.get(
-            f"{BASE_URL}/chat/history/{session_id}",
-            timeout=10
-        )
-        return response.json().get("history", [])
-
-    except Exception as e:
-        return []
+def reset_conversation(session_id: str) -> dict:
+    """Clear conversation history for a session"""
+    response = requests.post(f"{BACKEND_URL}/reset", params={"session_id": session_id})
+    response.raise_for_status()
+    return response.json()
+ 
+ 
+def get_all_sessions() -> list:
+    """Get all past sessions for admin dashboard"""
+    response = requests.get(f"{BACKEND_URL}/feedback/sessions")
+    response.raise_for_status()
+    return response.json().get("sessions", [])
+ 
+ 
+def get_session_conversation(session_id: str) -> list:
+    """Get full conversation history for a session"""
+    response = requests.get(f"{BACKEND_URL}/chat/history/{session_id}")
+    response.raise_for_status()
+    return response.json().get("history", [])
 
 def rename_chat_session(session_id: str, title: str):
-    try:
-        response = requests.put(
-            f"{BASE_URL}/session/rename/{session_id}",
-            json={"title": title},
-            timeout=10
-        )
-        return response.json()
 
-    except Exception as e:
-        return {"error": str(e)}
+    response = requests.put(
+        f"{BACKEND_URL}/session/rename/{session_id}",
+        json={"title": title}
+    )
+
+    response.raise_for_status()
+
+    return response.json()
