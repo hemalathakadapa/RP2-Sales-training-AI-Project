@@ -2,6 +2,7 @@ import requests
 import os
 import sys
 
+BACKEND_URL = "https://ai-student-simulator-for-training-sales.onrender.com"
 
 abs_path = os.path.dirname(os.path.abspath(__file__))
 if abs_path not in sys.path:
@@ -129,34 +130,35 @@ for k, v in defaults.items():
 # VOICE FUNCTION
 # =========================================================
 def autoplay_audio(text):
-    if not text:
-        return
     try:
+        print("=== TTS START ===")
+        
         tts_resp = requests.post(
             f"{BACKEND_URL}/voice/tts",
             json={"text": text},
             timeout=15
         )
-        if tts_resp.status_code != 200:
-            return
+        
+        print("TTS STATUS:", tts_resp.status_code)
+        print("TTS DATA:", tts_resp.text)
         
         data = tts_resp.json()
-        if "error" in data or not data.get("audio_url"):
-            return
+        audio_url = data.get("audio_url")
+        print("AUDIO URL:", audio_url)
 
         audio_resp = requests.get(
             f"{BACKEND_URL}{data['audio_url']}",
             timeout=15
         )
-        if audio_resp.status_code != 200:
-            return
+        print("AUDIO FILE STATUS:", audio_resp.status_code)
 
         # Step 3: Store base64 in session state for next render
         audio_b64 = base64.b64encode(audio_resp.content).decode()
         st.session_state.pending_audio = audio_b64
 
     except Exception as e:
-        st.error(f"Audio Error: {e}")
+        print("AUDIO ERROR:", e)
+        st.error(str(e))
 
 # =========================================================
 # SAVE HISTORY
