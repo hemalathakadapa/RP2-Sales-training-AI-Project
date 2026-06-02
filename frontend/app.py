@@ -26,7 +26,7 @@ _mod = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(_mod)
 
 get_ai_response = _mod.get_ai_response
-get_final_feedback = _mod.get_final_feedback
+get_final_feedback = _mod.get_evaluation
 
 _pc_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "persona_config.py")
 _spec2 = importlib.util.spec_from_file_location("persona_config", _pc_path)
