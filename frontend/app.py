@@ -40,11 +40,16 @@ PERSONAS = _mod2.PERSONAS
 COURSES = _mod2.COURSES
 
 # =========================================================
-# PAGE CONFIG
+# page config
 # =========================================================
+logo_path = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)),
+    "Frontend",
+    "rp2_logo.png"
+)
 st.set_page_config(
     page_title="RP2 AI Sales Trainer",
-    page_icon="🛡️",
+    page_icon="logo_path",
     layout="wide"
 )
 
@@ -99,23 +104,21 @@ input, textarea {
 </style>
 """, unsafe_allow_html=True)
 
-# =========================================================
-# PATHS
-# =========================================================
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-
-logo_path = os.path.join(BASE_DIR, "Frontend", "rp2_logo.png")
-history_path = os.path.join(BASE_DIR, "chat_histories")
-
-# =========================================================
 # SESSION STATE
 # =========================================================
 defaults = {
-    "page": "config",
+    "page": "landing",
+    "authenticated": False,
+    "user_id": None,
+    "user_name": "",
+    "email": "",
+    "role": "user",
     "messages": [],
     "history": "",
     "session_id": "",
     "candidate_name": "",
+    "p": list(PERSONAS.keys())[0] if PERSONAS else "",
+    "c": COURSES[0] if COURSES else "",
     "show_feedback": False,
     "last_voice_input": "",
     "pending_voice_input": "",
@@ -161,139 +164,6 @@ def autoplay_audio_local(text: str):
         )
     except Exception as e:
         st.warning(f"Local TTS error: {e}")
-# =========================================================
-# SIDEBAR
-# =========================================================
-with st.sidebar:
-
-    # =========================
-    # LOGO
-    # =========================
-
-    if os.path.exists(logo_path):
-        st.image(logo_path, width=220)
-
-    # =========================
-    # NEW CHAT BUTTON
-    # =========================
-
-    if st.button("New Chat"):
-        st.session_state.messages = []
-        st.session_state.session_id = ""
-        st.session_state.page = "config"
-        st.rerun()
-
-    st.markdown("---")
-
-    # =========================
-    # CHAT HISTORY
-    # =========================
-
-    st.markdown("## Chat History")
-
-    try:
-
-        sessions = get_all_sessions()
-
-        if sessions:
-
-            for s in sessions:
-
-                col1, col2 = st.columns([4,1])
-                # =========================
-                # LOAD OLD CHAT
-                # =========================
-
-                with col1:
-
-                    title = s.get("title", "New Chat")
-
-                    if st.button(
-                        title,
-                        key=f"load_{s['session_id']}"
-                    ):
-
-                        history = get_session_conversation(
-                            s["session_id"]
-                        )
-
-                        st.session_state.messages = []
-
-                        for turn in history:
-
-                            st.session_state.messages.append({
-                                "role": "user",
-                                "content": turn["salesperson"]
-                            })
-
-                            st.session_state.messages.append({
-                                "role": "assistant",
-                                "content": turn["student"]
-                            })
-
-                        st.session_state.session_id = s["session_id"]
-
-                        st.session_state.page = "chat"
-
-                        st.rerun()
-
-                # =========================
-                # RENAME CHAT
-                # =========================
-
-                with col2:
-
-                    if st.button(
-                        "✏️",
-                        key=f"rename_btn_{s['session_id']}"
-                    ):
-
-                        st.session_state.rename_target = s["session_id"]
-
-        else:
-            st.info("No chats yet.")
-
-    except Exception as e:
-        st.error(f"History Error: {e}")
-
-    # =========================
-    # RENAME UI
-    # =========================
-
-    if "rename_target" in st.session_state:
-
-        st.markdown("---")
-
-        new_name = st.text_input(
-            "Rename Chat",
-            key="rename_input"
-        )
-
-        if st.button("Save Rename"):
-
-            try:
-
-                rename_chat_session(
-                    st.session_state.rename_target,
-                    new_name
-                )
-
-                del st.session_state.rename_target
-
-                st.rerun()
-
-            except Exception as e:
-                st.error(f"Rename Error: {e}")
-
-    st.markdown("---")
-
-# =========================
-    # ADMIN BUTTON
-    # =========================
-
-    if st.button("Admin Dashboard"):
-        st.session_state.page = "admin"
-        st.rerun()
 
 # =========================================================
 # SAVE HISTORY
@@ -309,24 +179,191 @@ def save_chat_history():
         }, f, indent=4)
 
 # =========================================================
-# CONFIG PAGE
+# SECURITY CHECK
 # =========================================================
-if st.session_state.page == "config":
-    st.title("Setup Training")
-    st.session_state.candidate_name = st.text_input("Candidate Name:")
-    st.session_state.p = st.selectbox("Select Persona:", list(PERSONAS.keys()))
-    st.session_state.c = st.selectbox("Choose Training Course:", COURSES)
+
+if (
+    st.session_state.page not in ["landing", "admin"]
+    and not st.session_state.authenticated
+):
+    st.session_state.page = "landing"
+    st.rerun()
+
+# =========================================================
+# SIDEBAR
+# =========================================================
+if (st.session_state.authenticated and st.session_state.page in ["dashboard", "chat"]):
+    with st.sidebar:
+        if os.path.exists(logo_path):
+            st.image(logo_path, width=220)
+        st.markdown(
+            f"### Welcome\n{st.session_state.user_name}"
+        )
+    # =========================
+    # NEW CHAT BUTTON
+    # =========================
+
+        if st.button("New Chat"):
+            st.session_state.messages = []
+            st.session_state.session_id = ""
+            st.session_state.page = "dashboard"
+            st.rerun()
+            
+        st.markdown("---")
+        
+        st.markdown("## Chat History")
+        try:
+            sessions = get_all_sessions()
+            if sessions:
+                for s in sessions:
+                    col1, col2 = st.columns([4,1])
+                    with col1:
+                        title = s.get("title", "New Chat")
+                        if st.button(title, key=f"load_{s['session_id']}"):
+                            history = get_session_conversation(s["session_id"])
+                            st.session_state.messages = []
+                            for turn in history:
+                                st.session_state.messages.append({
+                                    "role": "user",
+                                    "content": turn["salesperson"]
+                                })
+
+                                st.session_state.messages.append({
+                                    "role": "assistant",
+                                    "content": turn["student"]
+                                 })
+                            st.session_state.session_id = s["session_id"]
+                            st.session_state.page = "chat"
+                            st.rerun()
+
+                    with col2:
+                        if st.button("⋮", key=f"rename_btn_{s['session_id']}"):
+                            st.session_state.rename_target = s["session_id"]
+            else:
+                st.info("No chats yet.")
+        except Exception as e:
+            st.error(f"History Error: {e}")
+
+        # RENAME
+        if "rename_target" in st.session_state:
+            st.markdown("---")
+            new_name = st.text_input("Rename Chat", key="rename_input")
+
+            col1, col2 = st.columns(2)
+            with col1:
+                save = st.button("Save")
+            with col2:
+                cancel = st.button("Cancel")
+                
+            if save:
+                try:
+                    rename_chat_session(st.session_state.rename_target,new_name)
+                    del st.session_state.rename_target
+                    
+                    st.rerun()
+                    
+                except Exception as e:
+                    st.error(f"Rename Error: {e}")
+            if cancel:
+                del st.session_state.rename_target
+                st.rerun()
+                    
+        st.markdown("---")
+        if st.button("🚪 Logout"):
+            st.session_state.authenticated = False
+            st.session_state.user_name = ""
+            st.session_state.user_id = None
+            st.session_state.page = "landing"
+            st.rerun()
+                        
+# ========================================================
+# LANDING PAGE
+# =========================================================
+    
+if st.session_state.page == "landing":
+    
+    col_left, col_right = st.columns([8,1])
+
+    with col_left:
+        st.title("RP2 AI Sales Trainer")
+
+    with col_right:
+         if st.button("Admin Dashboard"):
+             st.session_state.page = "admin"
+             st.rerun()
+
+    st.image(logo_path, width=220)
+
+    st.markdown("---")
+    
+    st.markdown("""
+    ## AI-Powered Sales Training Platform
+    Practice realistic student and sales conversations using AI-generated personas for different courses
+
+    ### Features
+    ✅ AI Student Personas
+    ✅ Voice & Text Conversations
+    ✅ Performance Evaluation
+    ✅ Session History
+    ✅ Analytics Dashboard
+    ✅ Personalized Feedback
+    ---
+    """)
+    col1, col2 = st.columns(2)
+    with col1:
+        st.subheader("Login")
+        email = st.text_input("Email")
+        password = st.text_input("Password", type="password")
+        if st.button("Login"):
+            st.session_state.authenticated = True
+            st.session_state.user_name = email
+            st.session_state.page = "dashboard"
+            st.rerun()
+    with col2:
+        st.subheader("Create Account")
+        new_name = st.text_input("Name")
+        new_email = st.text_input("Email", key="signup_email")
+        new_password = st.text_input("Password", type="password", key="signup_password")
+        if st.button("Sign Up"):
+            st.success("Account created successfully")
+            
+# =========================================================
+#  DASHNOARD
+# =========================================================
+
+elif st.session_state.page == "dashboard":
+
+    st.title(f"Welcome {st.session_state.user_name}")
+    col1,col2,col3 = st.columns(3)
+
+    col1.metric("Sessions", "15")
+    col2.metric("Average Score", "84%")
+    col3.metric("Completed Trainings", "9")
+
+    st.markdown("---")
+
+    st.session_state.candidate_name = st.text_input("Candidate Name")
+    st.subheader("Select Persona")
+    st.session_state.p = st.selectbox(
+        "",
+        list(PERSONAS.keys())
+    )
+
+    st.subheader("Select Course")
+
+    st.session_state.c = st.selectbox(
+        "",
+        COURSES
+    )
 
     if st.button("Start Training Session"):
-        if not st.session_state.candidate_name.strip():
-            st.warning("Please enter candidate name")
-        else:
-            st.session_state.messages   = []
-            st.session_state.session_id = ""   # backend will assign one on first message
-            st.session_state.show_feedback = False
-            st.session_state.page = "chat"
-            st.rerun()
 
+        st.session_state.messages = []
+        st.session_state.session_id = ""
+        st.session_state.show_feedback = False
+        st.session_state.page = "chat"
+
+        st.rerun()
 # =========================================================
 # CHAT PAGE
 # =========================================================
@@ -495,7 +532,7 @@ elif st.session_state.page == "chat":
             st.session_state.history = ""
             st.session_state.show_feedback = False
             st.session_state.last_voice_input = ""
-            st.session_state.page = "config"
+            st.session_state.page = "dashboard"
             st.rerun()
 
 # =========================================================
@@ -503,6 +540,7 @@ elif st.session_state.page == "chat":
 # =========================================================
 elif st.session_state.page == "admin":
     st.title("Admin Dashboard")
+    st.markdown("### Training Analytics")
     try:
         sessions = get_all_sessions()
  
@@ -539,6 +577,7 @@ elif st.session_state.page == "admin":
         st.error(f"Could not load sessions: {e}")
 
     if st.button("Back to Home"):
-        st.session_state.page = "config"
+        st.session_state.page = "dashboard"
         st.rerun()
-
+        
+st.markdown("---")
