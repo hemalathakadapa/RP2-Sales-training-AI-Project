@@ -103,6 +103,45 @@ input, textarea {
 </style>
 """, unsafe_allow_html=True)
 
+st.markdown("""
+<style>
+
+.main-header{
+    display:flex;
+    align-items:center;
+    gap:20px;
+    margin-bottom:20px;
+}
+
+.main-title{
+    font-size:42px;
+    font-weight:800;
+    color:white;
+}
+
+.info-card{
+    background:rgba(255,255,255,0.06);
+    padding:30px;
+    border-radius:15px;
+    border:1px solid rgba(255,255,255,0.1);
+}
+
+.login-card{
+    background:white;
+    padding:30px;
+    border-radius:15px;
+    color:black;
+}
+
+.course-box{
+    background:rgba(255,255,255,0.08);
+    padding:15px;
+    border-radius:12px;
+    margin-top:20px;
+}
+
+</style>
+""", unsafe_allow_html=True)
 # SESSION STATE
 # =========================================================
 defaults = {
@@ -202,7 +241,7 @@ if (st.session_state.authenticated and st.session_state.page in ["dashboard", "c
     # NEW CHAT BUTTON
     # =========================
 
-        if st.button("New Chat"):
+        if st.button("New Session"):
             st.session_state.messages = []
             st.session_state.session_id = ""
             st.session_state.page = "dashboard"
@@ -217,7 +256,7 @@ if (st.session_state.authenticated and st.session_state.page in ["dashboard", "c
                 for s in sessions:
                     col1, col2 = st.columns([4,1])
                     with col1:
-                        title = s.get("title", "New Chat")
+                        title = s.get("title", "New Session")
                         if st.button(title, key=f"load_{s['session_id']}"):
                             history = get_session_conversation(s["session_id"])
                             st.session_state.messages = []
@@ -278,54 +317,162 @@ if (st.session_state.authenticated and st.session_state.page in ["dashboard", "c
 # ========================================================
 # LANDING PAGE
 # =========================================================
-    
 if st.session_state.page == "landing":
-    
-    col_left, col_right = st.columns([8,1])
 
-    with col_left:
-        st.title("RP2 AI Sales Trainer")
+    # ==========================================
+    # HEADER
+    # ==========================================
 
-    with col_right:
-         if st.button("Admin Dashboard"):
-             st.session_state.page = "admin"
-             st.rerun()
+    col1, col2 = st.columns([10,2])
 
-    st.image(logo_path, width=220)
+    with col1:
+
+        header1, header2 = st.columns([1,8])
+
+        with header1:
+            if os.path.exists(logo_path):
+                st.image(logo_path, width=90)
+
+        with header2:
+            st.markdown(
+                """
+                <div class="main-title">
+                RP2 SALES TRAINING AGENT
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+
+    with col2:
+        if st.button("Admin Dashboard"):
+            st.session_state.page = "admin"
+            st.rerun()
 
     st.markdown("---")
-    
-    st.markdown("""
-    ## AI-Powered Sales Training Platform
-    Practice realistic student and sales conversations using AI-generated personas for different courses
 
-    ### Features
-    ✅ AI Student Personas
-    ✅ Voice & Text Conversations
-    ✅ Performance Evaluation
-    ✅ Session History
-    ✅ Analytics Dashboard
-    ✅ Personalized Feedback
-    ---
-    """)
-    col1, col2 = st.columns(2)
-    with col1:
+    # ==========================================
+    # BODY
+    # ==========================================
+
+    left, right = st.columns([3,2])
+
+    # ==========================================
+    # ABOUT PLATFORM
+    # ==========================================
+
+    with left:
+
+        st.markdown('<div class="info-card">', unsafe_allow_html=True)
+
+        st.subheader("About The Platform")
+
+        st.write(
+            """
+            RP2 SALES TRAINING AGENT is an AI-powered training platform
+            designed to help sales counsellors practice realistic student
+            interactions before engaging with actual prospects.
+
+            The platform simulates student conversations using AI-generated
+            personas, allowing candidates to improve communication,
+            objection handling, course pitching, confidence, and sales
+            performance. Every session is evaluated automatically and
+            detailed feedback is provided to support continuous improvement.
+            """
+        )
+
+        st.markdown("### Courses Offered")
+
+        st.markdown("""
+        ✅ Data Science
+
+        ✅ Data Analytics
+
+        ✅ Agentic AI
+        """)
+
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    # ==========================================
+    # LOGIN BOX
+    # ==========================================
+
+    with right:
+
+        st.markdown('<div class="login-card">', unsafe_allow_html=True)
+
         st.subheader("Login")
-        email = st.text_input("Email")
-        password = st.text_input("Password", type="password")
+
+        email = st.text_input(
+            "Email",
+            key="login_email"
+        )
+
+        password = st.text_input(
+            "Password",
+            type="password",
+            key="login_password"
+        )
+
         if st.button("Login"):
+
             st.session_state.authenticated = True
             st.session_state.user_name = email
+
             st.session_state.page = "dashboard"
+
             st.rerun()
+
+        st.markdown("---")
+
+        if st.button("Don't Have An Account? Sign Up"):
+
+            st.session_state.page = "signup"
+
+            st.rerun()
+
+        st.markdown('</div>', unsafe_allow_html=True)
+
+# signup page
+
+elif st.session_state.page == "signup":
+
+    st.title("Create Account")
+
+    name = st.text_input("Full Name")
+
+    email = st.text_input("Email")
+
+    password = st.text_input(
+        "Password",
+        type="password"
+    )
+
+    confirm = st.text_input(
+        "Confirm Password",
+        type="password"
+    )
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+
+        if st.button("Create Account"):
+
+            st.success(
+                "Account Created Successfully. Please Login."
+            )
+
+            st.session_state.page = "landing"
+
+            st.rerun()
+
     with col2:
-        st.subheader("Create Account")
-        new_name = st.text_input("Name")
-        new_email = st.text_input("Email", key="signup_email")
-        new_password = st.text_input("Password", type="password", key="signup_password")
-        if st.button("Sign Up"):
-            st.success("Account created successfully")
-            
+
+        if st.button("Back To Login"):
+
+            st.session_state.page = "landing"
+
+            st.rerun()
 # =========================================================
 #  DASHNOARD
 # =========================================================
