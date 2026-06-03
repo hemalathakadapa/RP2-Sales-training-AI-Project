@@ -550,7 +550,7 @@ elif st.session_state.page == "signup":
  
         st.markdown('</div>', unsafe_allow_html=True)
 # =========================================================
-#  DASHNOARD
+#  DASHBOARD
 # =========================================================
 
 elif st.session_state.page == "dashboard":
@@ -563,11 +563,7 @@ elif st.session_state.page == "dashboard":
     col3.metric("Completed Trainings", "9")
 
     st.markdown("---")
-
-    st.session_state.candidate_name = st.text_input(
-        "Candidate Name",
-        value=st.session_state.candidate_name
-    )
+    
     st.subheader("Select Persona")
     st.session_state.p = st.selectbox("", list(PERSONAS.keys()))
  
