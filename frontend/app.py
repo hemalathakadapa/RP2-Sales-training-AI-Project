@@ -44,7 +44,6 @@ COURSES = _mod2.COURSES
 # =========================================================
 logo_path = os.path.join(
     os.path.dirname(os.path.abspath(__file__)),
-    "Frontend",
     "rp2_logo.png"
 )
 st.set_page_config(
