@@ -24,6 +24,8 @@ _mod = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(_mod)
 
 get_ai_response = _mod.get_ai_response
+register_user = _mod.register_user
+login_user = _mod.login_user
 get_evaluation = _mod.get_evaluation
 reset_conversation = _mod.reset_conversation
 get_all_sessions = _mod.get_all_sessions
@@ -492,12 +494,15 @@ if st.session_state.page == "landing":
             elif not password:
                 st.error("Please enter your password.")
             else:
-                # TODO: replace with real DB/auth check
-                st.session_state.authenticated = True
-                st.session_state.email         = email.strip()
-                st.session_state.user_name     = email.strip().split("@")[0].capitalize()
-                st.session_state.page          = "dashboard"
-                st.rerun()
+                result = login_user(email=email, password=password)
+                if result.get("success"):
+                    st.session_state.authenticated = True
+                    st.session_state.user_name = result["name"]
+                    st.session_state.user_id = result["user_id"]
+                    st.session_state.page = "dashboard"
+                    st.rerun()
+                else:
+                    st.error(result["message"])
  
         st.markdown("<hr style='border-color:#ddd;margin:1rem 0'>", unsafe_allow_html=True)
  
@@ -538,10 +543,13 @@ elif st.session_state.page == "signup":
                 elif password != confirm:
                     st.error("Passwords do not match.")
                 else:
-                    # TODO: save user to database here
-                    st.success("Account created successfully! Please login.")
-                    st.session_state.page = "landing"
-                    st.rerun()
+                    result = register_user( name=name, email=email, password=password)
+                    if result.get("success"):
+                        st.success("Account created successfully")
+                        st.session_state.page = "landing"
+                        st.rerun()
+                    else:
+                        st.error(result["message"])
  
         with col2:
             if st.button("Back to Login", key="btn_back"):
