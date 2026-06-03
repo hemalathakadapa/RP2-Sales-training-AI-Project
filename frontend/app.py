@@ -70,90 +70,133 @@ st.markdown("""
 section[data-testid="stSidebar"] {
     background-color: #0b1220 !important;
 }
-
-/* SCOPED white text — dark areas only */
-.stApp .stMarkdown h1,
-.stApp .stMarkdown h2,
-.stApp .stMarkdown h3,
-.stApp .stMarkdown h4,
-.stApp .stMarkdown h5,
-.stApp .stMarkdown h6,
-.stApp .stMarkdown p {
+section[data-testid="stSidebar"] * {
     color: white !important;
 }
-.stApp .stTextInput label,
-.stApp .stSelectbox label,
-.stApp .stRadio label {
+ 
+/* ── GLOBAL TEXT (dark bg areas) ── */
+.stApp h1, .stApp h2, .stApp h3,
+.stApp h4, .stApp h5, .stApp h6 {
     color: white !important;
 }
+.stApp p, .stApp li {
+    color: rgba(255,255,255,0.9) !important;
+}
 
-/* INPUTS */
-input, textarea {
-    background-color: white !important;
-    color: black !important;
+/* ── WIDGET LABELS (dark bg) ── */
+.stApp .stTextInput > label,
+.stApp .stSelectbox > label,
+.stApp .stRadio > label {
+    color: white !important;
+    font-weight: 600 !important;
+}
+
+/* ── INPUTS ── */
+.stTextInput > div > div > input,
+.stTextInput > div > div > input:focus {
+    background-color: #ffffff !important;
+    color: #111111 !important;
     border-radius: 10px !important;
+    border: 1.5px solid #4facfe !important;
 }
-
-/* CHAT BOX */
+ 
+/* ── BUTTONS ── */
+.stButton > button {
+    background: linear-gradient(90deg, #4facfe, #00f2fe) !important;
+    color: #000000 !important;
+    font-weight: 700 !important;
+    border-radius: 10px !important;
+    border: none !important;
+    width: 100% !important;
+    padding: 0.5rem 1rem !important;
+    font-size: 15px !important;
+}
+.stButton > button:hover {
+    opacity: 0.9 !important;
+    transform: scale(1.01) !important;
+}
+ 
+/* ── CHAT MESSAGES ── */
 [data-testid="stChatMessage"] {
-    background: rgba(255,255,255,0.08) !important;
+    background: rgba(255,255,255,0.10) !important;
     border-radius: 12px !important;
     padding: 10px !important;
 }
-
-/* BUTTON */
-.stButton > button {
-    background: linear-gradient(90deg, #4facfe, #00f2fe) !important;
-    color: black !important;
-    font-weight: bold !important;
-    border-radius: 10px !important;
-    width: 100%;
-}
  
-/* CARDS */
-.main-title {
-    font-size: 38px;
-    font-weight: 800;
-    color: white;
-    line-height: 1.1;
-}
-
-.info-card{
-    background:rgba(255,255,255,0.06);
-    padding:30px;
-    border-radius:15px;
-    border:1px solid rgba(255,255,255,0.1);
-    color: white;
-}
-
-.login-card{
-    background:white;
-    padding:30px;
-    border-radius:15px;
-    color:black;
-}
-
-/* FIX: override white text rule inside login card */
-.login-card h1, .login-card h2, .login-card h3,
-.login-card h4, .login-card h5, .login-card h6,
-.login-card p, .login-card label {
-    color: black !important;
-}
-
-.course-badge {
-    display: inline-block;
-    background: rgba(79,172,254,0.2);
-    border: 1px solid #4facfe;
-    color: #4facfe;
-    padding: 4px 14px;
-    border-radius: 20px;
-    font-size: 14px;
-    margin: 4px 4px 4px 0;
-
+/* ── DIVIDER ── */
 hr {
     border-color: rgba(255,255,255,0.15) !important;
 }
-
+ 
+/* ── INFO CARD (About section) ── */
+.info-card {
+    background: rgba(255,255,255,0.07) !important;
+    border: 1px solid rgba(255,255,255,0.18) !important;
+    border-radius: 16px !important;
+    padding: 2rem !important;
+    height: 100% !important;
+}
+.info-card h3, .info-card p, .info-card li {
+    color: white !important;
+}
+ 
+/* ── LOGIN CARD ── */
+/* 
+   Streamlit renders widgets OUTSIDE the html div.
+   We instead style the column container that wraps the right column.
+   The unique data-testid approach targets it reliably.
+*/
+div[data-testid="column"]:nth-of-type(2) > div:first-child {
+    background: white !important;
+    border-radius: 16px !important;
+    padding: 2rem !important;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3) !important;
+}
+ 
+/* Fix text color inside login card column */
+div[data-testid="column"]:nth-of-type(2) label,
+div[data-testid="column"]:nth-of-type(2) p,
+div[data-testid="column"]:nth-of-type(2) h2,
+div[data-testid="column"]:nth-of-type(2) h3 {
+    color: #111111 !important;
+}
+ 
+/* ── COURSE BADGES ── */
+.course-badge {
+    display: inline-block;
+    background: rgba(79,172,254,0.15);
+    border: 1.5px solid #4facfe;
+    color: #4facfe;
+    padding: 5px 16px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 600;
+    margin: 5px 5px 5px 0;
+}
+ 
+/* ── MAIN TITLE ── */
+.main-title {
+    font-size: 38px;
+    font-weight: 800;
+    color: white !important;
+    line-height: 1.15;
+    margin: 0;
+    padding: 0;
+}
+ 
+/* ── METRIC CARDS ── */
+[data-testid="stMetric"] {
+    background: rgba(255,255,255,0.08) !important;
+    border-radius: 12px !important;
+    padding: 1rem !important;
+    border: 1px solid rgba(255,255,255,0.15) !important;
+}
+[data-testid="stMetric"] label,
+[data-testid="stMetricValue"],
+[data-testid="stMetricDelta"] {
+    color: white !important;
+}
+ 
 </style>
 """, unsafe_allow_html=True)
 
@@ -325,11 +368,11 @@ if st.session_state.page == "landing":
 
     col1, col2 = st.columns([10,2])
     with col1:
-        header1, header2 = st.columns([1,8])
-        with header1:
+        h1, h2 = st.columns([1,8])
+        with h1:
             if os.path.exists(logo_path):
-                st.image(logo_path, width=90)
-        with header2:
+                st.image(logo_path, width=150)
+        with h2:
             st.markdown(
                 """
                 <div class="main-title">
@@ -339,48 +382,75 @@ if st.session_state.page == "landing":
                 unsafe_allow_html=True
             )
     with col2:
-        if st.session_state.authenticated:
-            if st.button("Admin Dashboard"):
-                st.session_state.page = "admin"
-                st.rerun()
+        if st.button("Admin", key="btn_admin_landing"):
+            st.session_state.show_admin_login = True
+ 
+    # Admin password popup — shown directly below header when triggered
+    if st.session_state.get("show_admin_login"):
+        with st.container():
+            st.markdown("""
+            <div style="background:white;padding:20px 24px;border-radius:14px;
+                        border:1.5px solid #4facfe;max-width:340px;margin:8px 0 0 0;">
+                <p style="color:#111;font-weight:700;font-size:16px;margin:0 0 12px">
+                    Admin Access
+                </p>
+            </div>
+            """, unsafe_allow_html=True)
+            admin_pass = st.text_input(
+                "Admin Password", type="password", key="admin_pass_input",
+                placeholder="Enter admin password"
+            )
+            c1, c2 = st.columns(2)
+            with c1:
+                if st.button("Enter", key="btn_admin_enter"):
+                    if admin_pass == "admin123":   # TODO: replace with secure check
+                        st.session_state.authenticated    = True
+                        st.session_state.role             = "admin"
+                        st.session_state.user_name        = "Admin"
+                        st.session_state.show_admin_login = False
+                        st.session_state.page             = "admin"
+                        st.rerun()
+                    else:
+                        st.error("Incorrect password.")
+            with c2:
+                if st.button("Cancel", key="btn_admin_cancel"):
+                    st.session_state.show_admin_login = False
+                    st.rerun()
  
     st.markdown("---")
  
-    left, right = st.columns([3, 2])
+    left, right = st.columns([3, 2], gap="large")
  
     with left:
-        st.markdown('<div class="info-card">', unsafe_allow_html=True)
-        st.subheader("About The Platform")
-        st.write(
-            """
-            RP2 SALES TRAINING AGENT is an AI-powered training platform
-            designed to help sales counsellors practice realistic student
-            interactions before engaging with actual prospects.
- 
-            The platform simulates student conversations using AI-generated
-            personas, allowing candidates to improve communication,
-            objection handling, course pitching, confidence, and sales
-            performance. Every session is evaluated automatically and
-            detailed feedback is provided to support continuous improvement.
-            """
-        )
-        st.markdown("#### Courses Offered")
-        st.markdown(
-            """
+        st.markdown("""
+        <div class="info-card">
+            <h3 style="color:white;margin-top:0">About The Platform</h3>
+            <p style="color:rgba(255,255,255,0.88);line-height:1.7">
+                RP2 SALES TRAINING AGENT is an AI-powered training platform
+                designed to help sales counsellors practice realistic student
+                interactions before engaging with actual prospects.
+            </p>
+            <p style="color:rgba(255,255,255,0.88);line-height:1.7">
+                The platform simulates student conversations using AI-generated
+                personas, allowing candidates to improve communication,
+                objection handling, course pitching, confidence, and sales
+                performance. Every session is evaluated automatically and
+                detailed feedback is provided to support continuous improvement.
+            </p>
+            <h4 style="color:white;margin-bottom:10px">Courses Offered</h4>
             <span class="course-badge">✦ Data Science</span>
             <span class="course-badge">✦ Data Analytics</span>
             <span class="course-badge">✦ Agentic AI</span>
-            """,
-            unsafe_allow_html=True
-        )
-        st.markdown('</div>', unsafe_allow_html=True)
+        </div>
+        """, unsafe_allow_html=True)
  
     with right:
-        st.markdown('<div class="login-card">', unsafe_allow_html=True)
-        st.subheader("Login")
+        st.markdown("<h3 style='color:#111;margin-bottom:0.5rem'>Login</h3>", unsafe_allow_html=True)
  
-        email    = st.text_input("Email",    key="login_email",    placeholder="you@example.com")
-        password = st.text_input("Password", key="login_password", type="password")
+        email    = st.text_input("Email",    key="login_email",    placeholder="you@example.com",  label_visibility="visible")
+        password = st.text_input("Password", key="login_password", type="password",                label_visibility="visible")
+ 
+        st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
  
         if st.button("Login", key="btn_login"):
             if not email.strip():
@@ -397,15 +467,12 @@ if st.session_state.page == "landing":
                 st.session_state.page          = "dashboard"
                 st.rerun()
  
-        st.markdown("---")
+        st.markdown("<hr style='border-color:#ddd;margin:1rem 0'>", unsafe_allow_html=True)
  
         if st.button("Don't Have An Account? Sign Up", key="btn_goto_signup"):
             st.session_state.page = "signup"
             st.rerun()
- 
-        st.markdown('</div>', unsafe_allow_html=True)
-
-    
+  
 # =========================================================
 # SIGNUP PAGE
 # =========================================================
@@ -413,9 +480,8 @@ elif st.session_state.page == "signup":
  
     # Centered layout
     _, center, _ = st.columns([1, 2, 1])
- 
     with center:
-        st.markdown('<div class="login-card">', unsafe_allow_html=True)
+        st.markdown("<h2 style='color:white;text-align:center'>Create Account</h2>", unsafe_allow_html=True)
         st.subheader("Create Account")
  
         name     = st.text_input("Full Name",         key="signup_name",     placeholder="John Smith")
@@ -424,7 +490,6 @@ elif st.session_state.page == "signup":
         confirm  = st.text_input("Confirm Password",   key="signup_confirm",  type="password")
  
         col1, col2 = st.columns(2)
- 
         with col1:
             if st.button("Create Account", key="btn_create"):
                 # Validation
