@@ -74,3 +74,17 @@ def login_user(email, password):
     )
 
     return response.json()
+
+def reset_password(email, new_password):
+
+    response = requests.post(
+        f"{BACKEND_URL}/auth/reset-password",
+        json={
+            "email": email,
+            "new_password": new_password
+        }
+    )
+
+    response.raise_for_status()
+
+    return response.json()
