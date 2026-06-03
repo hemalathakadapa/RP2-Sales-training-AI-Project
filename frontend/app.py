@@ -13,7 +13,6 @@ import json
 import tempfile
 import datetime
 import base64
-from persona_config import PERSONAS, COURSES
 from gtts import gTTS
 from streamlit_mic_recorder import speech_to_text
 import streamlit.components.v1 as components
@@ -42,13 +41,12 @@ COURSES = _mod2.COURSES
 # =========================================================
 # page config
 # =========================================================
-logo_path = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)),
-    "rp2_logo.png"
-)
+logo_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "rp2_logo.png")
+history_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "chat_history")
+
 st.set_page_config(
     page_title="RP2 AI Sales Trainer",
-    page_icon="logo_path",
+    page_icon=logo_path,
     layout="wide"
 )
 
@@ -73,8 +71,19 @@ section[data-testid="stSidebar"] {
     background-color: #0b1220 !important;
 }
 
-/* TEXT */
-h1, h2, h3, h4, h5, h6, p, label {
+/* SCOPED white text — dark areas only */
+.stApp .stMarkdown h1,
+.stApp .stMarkdown h2,
+.stApp .stMarkdown h3,
+.stApp .stMarkdown h4,
+.stApp .stMarkdown h5,
+.stApp .stMarkdown h6,
+.stApp .stMarkdown p {
+    color: white !important;
+}
+.stApp .stTextInput label,
+.stApp .stSelectbox label,
+.stApp .stRadio label {
     color: white !important;
 }
 
@@ -100,23 +109,13 @@ input, textarea {
     border-radius: 10px !important;
     width: 100%;
 }
-</style>
-""", unsafe_allow_html=True)
-
-st.markdown("""
-<style>
-
-.main-header{
-    display:flex;
-    align-items:center;
-    gap:20px;
-    margin-bottom:20px;
-}
-
-.main-title{
-    font-size:42px;
-    font-weight:800;
-    color:white;
+ 
+/* CARDS */
+.main-title {
+    font-size: 38px;
+    font-weight: 800;
+    color: white;
+    line-height: 1.1;
 }
 
 .info-card{
@@ -124,6 +123,7 @@ st.markdown("""
     padding:30px;
     border-radius:15px;
     border:1px solid rgba(255,255,255,0.1);
+    color: white;
 }
 
 .login-card{
@@ -133,15 +133,30 @@ st.markdown("""
     color:black;
 }
 
-.course-box{
-    background:rgba(255,255,255,0.08);
-    padding:15px;
-    border-radius:12px;
-    margin-top:20px;
+/* FIX: override white text rule inside login card */
+.login-card h1, .login-card h2, .login-card h3,
+.login-card h4, .login-card h5, .login-card h6,
+.login-card p, .login-card label {
+    color: black !important;
+}
+
+.course-badge {
+    display: inline-block;
+    background: rgba(79,172,254,0.2);
+    border: 1px solid #4facfe;
+    color: #4facfe;
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 14px;
+    margin: 4px 4px 4px 0;
+
+hr {
+    border-color: rgba(255,255,255,0.15) !important;
 }
 
 </style>
 """, unsafe_allow_html=True)
+
 # SESSION STATE
 # =========================================================
 defaults = {
@@ -216,14 +231,12 @@ def save_chat_history():
             "history": st.session_state.history
         }, f, indent=4)
 
-# =========================================================
+# =================================================
 # SECURITY CHECK
-# =========================================================
-
-if (
-    st.session_state.page not in ["landing", "admin"]
-    and not st.session_state.authenticated
-):
+# =================================================
+PROTECTED_PAGES = {"dashboard", "chat", "admin"}
+ 
+if st.session_state.page in PROTECTED_PAGES and not st.session_state.authenticated:
     st.session_state.page = "landing"
     st.rerun()
 
@@ -234,27 +247,23 @@ if (st.session_state.authenticated and st.session_state.page in ["dashboard", "c
     with st.sidebar:
         if os.path.exists(logo_path):
             st.image(logo_path, width=220)
-        st.markdown(
-            f"### Welcome\n{st.session_state.user_name}"
-        )
-    # =========================
-    # NEW CHAT BUTTON
-    # =========================
+        st.markdown(f"### Welcome\n{st.session_state.user_name}")
 
+        # NEW SESSION BUTTON
         if st.button("New Session"):
             st.session_state.messages = []
             st.session_state.session_id = ""
             st.session_state.page = "dashboard"
             st.rerun()
-            
+ 
         st.markdown("---")
-        
         st.markdown("## Chat History")
+ 
         try:
             sessions = get_all_sessions()
             if sessions:
                 for s in sessions:
-                    col1, col2 = st.columns([4,1])
+                    col1, col2 = st.columns([4, 1])
                     with col1:
                         title = s.get("title", "New Session")
                         if st.button(title, key=f"load_{s['session_id']}"):
@@ -265,15 +274,13 @@ if (st.session_state.authenticated and st.session_state.page in ["dashboard", "c
                                     "role": "user",
                                     "content": turn["salesperson"]
                                 })
-
                                 st.session_state.messages.append({
                                     "role": "assistant",
                                     "content": turn["student"]
-                                 })
+                                })
                             st.session_state.session_id = s["session_id"]
                             st.session_state.page = "chat"
                             st.rerun()
-
                     with col2:
                         if st.button("⋮", key=f"rename_btn_{s['session_id']}"):
                             st.session_state.rename_target = s["session_id"]
@@ -281,31 +288,27 @@ if (st.session_state.authenticated and st.session_state.page in ["dashboard", "c
                 st.info("No chats yet.")
         except Exception as e:
             st.error(f"History Error: {e}")
-
+ 
         # RENAME
         if "rename_target" in st.session_state:
             st.markdown("---")
             new_name = st.text_input("Rename Chat", key="rename_input")
-
             col1, col2 = st.columns(2)
             with col1:
                 save = st.button("Save")
             with col2:
                 cancel = st.button("Cancel")
-                
             if save:
                 try:
-                    rename_chat_session(st.session_state.rename_target,new_name)
+                    rename_chat_session(st.session_state.rename_target, new_name)
                     del st.session_state.rename_target
-                    
                     st.rerun()
-                    
                 except Exception as e:
                     st.error(f"Rename Error: {e}")
             if cancel:
                 del st.session_state.rename_target
                 st.rerun()
-                    
+ 
         st.markdown("---")
         if st.button("🚪 Logout"):
             st.session_state.authenticated = False
@@ -313,26 +316,19 @@ if (st.session_state.authenticated and st.session_state.page in ["dashboard", "c
             st.session_state.user_id = None
             st.session_state.page = "landing"
             st.rerun()
-                        
+        
+    
 # ========================================================
 # LANDING PAGE
 # =========================================================
 if st.session_state.page == "landing":
 
-    # ==========================================
-    # HEADER
-    # ==========================================
-
     col1, col2 = st.columns([10,2])
-
     with col1:
-
         header1, header2 = st.columns([1,8])
-
         with header1:
             if os.path.exists(logo_path):
                 st.image(logo_path, width=90)
-
         with header2:
             st.markdown(
                 """
@@ -342,36 +338,25 @@ if st.session_state.page == "landing":
                 """,
                 unsafe_allow_html=True
             )
-
     with col2:
-        if st.button("Admin Dashboard"):
-            st.session_state.page = "admin"
-            st.rerun()
-
+        if st.session_state.authenticated:
+            if st.button("Admin Dashboard"):
+                st.session_state.page = "admin"
+                st.rerun()
+ 
     st.markdown("---")
-
-    # ==========================================
-    # BODY
-    # ==========================================
-
-    left, right = st.columns([3,2])
-
-    # ==========================================
-    # ABOUT PLATFORM
-    # ==========================================
-
+ 
+    left, right = st.columns([3, 2])
+ 
     with left:
-
         st.markdown('<div class="info-card">', unsafe_allow_html=True)
-
         st.subheader("About The Platform")
-
         st.write(
             """
             RP2 SALES TRAINING AGENT is an AI-powered training platform
             designed to help sales counsellors practice realistic student
             interactions before engaging with actual prospects.
-
+ 
             The platform simulates student conversations using AI-generated
             personas, allowing candidates to improve communication,
             objection handling, course pitching, confidence, and sales
@@ -379,100 +364,94 @@ if st.session_state.page == "landing":
             detailed feedback is provided to support continuous improvement.
             """
         )
-
-        st.markdown("### Courses Offered")
-
-        st.markdown("""
-        ✅ Data Science
-
-        ✅ Data Analytics
-
-        ✅ Agentic AI
-        """)
-
+        st.markdown("#### Courses Offered")
+        st.markdown(
+            """
+            <span class="course-badge">✦ Data Science</span>
+            <span class="course-badge">✦ Data Analytics</span>
+            <span class="course-badge">✦ Agentic AI</span>
+            """,
+            unsafe_allow_html=True
+        )
         st.markdown('</div>', unsafe_allow_html=True)
-
-    # ==========================================
-    # LOGIN BOX
-    # ==========================================
-
+ 
     with right:
-
         st.markdown('<div class="login-card">', unsafe_allow_html=True)
-
         st.subheader("Login")
-
-        email = st.text_input(
-            "Email",
-            key="login_email"
-        )
-
-        password = st.text_input(
-            "Password",
-            type="password",
-            key="login_password"
-        )
-
-        if st.button("Login"):
-
-            st.session_state.authenticated = True
-            st.session_state.user_name = email
-
-            st.session_state.page = "dashboard"
-
-            st.rerun()
-
+ 
+        email    = st.text_input("Email",    key="login_email",    placeholder="you@example.com")
+        password = st.text_input("Password", key="login_password", type="password")
+ 
+        if st.button("Login", key="btn_login"):
+            if not email.strip():
+                st.error("Please enter your email.")
+            elif "@" not in email:
+                st.error("Please enter a valid email address.")
+            elif not password:
+                st.error("Please enter your password.")
+            else:
+                # TODO: replace with real DB/auth check
+                st.session_state.authenticated = True
+                st.session_state.email         = email.strip()
+                st.session_state.user_name     = email.strip().split("@")[0].capitalize()
+                st.session_state.page          = "dashboard"
+                st.rerun()
+ 
         st.markdown("---")
-
-        if st.button("Don't Have An Account? Sign Up"):
-
+ 
+        if st.button("Don't Have An Account? Sign Up", key="btn_goto_signup"):
             st.session_state.page = "signup"
-
             st.rerun()
-
+ 
         st.markdown('</div>', unsafe_allow_html=True)
 
-# signup page
-
+    
+# =========================================================
+# SIGNUP PAGE
+# =========================================================
 elif st.session_state.page == "signup":
-
-    st.title("Create Account")
-
-    name = st.text_input("Full Name")
-
-    email = st.text_input("Email")
-
-    password = st.text_input(
-        "Password",
-        type="password"
-    )
-
-    confirm = st.text_input(
-        "Confirm Password",
-        type="password"
-    )
-
-    col1, col2 = st.columns(2)
-
-    with col1:
-
-        if st.button("Create Account"):
-
-            st.success(
-                "Account Created Successfully. Please Login."
-            )
-
-            st.session_state.page = "landing"
-
-            st.rerun()
-
-    with col2:
-
-        if st.button("Back To Login"):
-
-            st.session_state.page = "landing"
-
-            st.rerun()
+ 
+    # Centered layout
+    _, center, _ = st.columns([1, 2, 1])
+ 
+    with center:
+        st.markdown('<div class="login-card">', unsafe_allow_html=True)
+        st.subheader("Create Account")
+ 
+        name     = st.text_input("Full Name",         key="signup_name",     placeholder="John Smith")
+        email    = st.text_input("Email",              key="signup_email",    placeholder="you@example.com")
+        password = st.text_input("Password",           key="signup_password", type="password")
+        confirm  = st.text_input("Confirm Password",   key="signup_confirm",  type="password")
+ 
+        col1, col2 = st.columns(2)
+ 
+        with col1:
+            if st.button("Create Account", key="btn_create"):
+                # Validation
+                if not name.strip():
+                    st.error("Full name is required.")
+                elif not email.strip():
+                    st.error("Email is required.")
+                elif "@" not in email:
+                    st.error("Please enter a valid email address.")
+                elif not password:
+                    st.error("Password is required.")
+                elif len(password) < 6:
+                    st.error("Password must be at least 6 characters.")
+                elif password != confirm:
+                    st.error("Passwords do not match.")
+                else:
+                    # TODO: save user to database here
+                    st.success("Account created successfully! Please login.")
+                    st.session_state.page = "landing"
+                    st.rerun()
+ 
+        with col2:
+            if st.button("Back to Login", key="btn_back"):
+                st.session_state.page = "landing"
+                st.rerun()
+ 
+        st.markdown('</div>', unsafe_allow_html=True)
 # =========================================================
 #  DASHNOARD
 # =========================================================
@@ -488,27 +467,21 @@ elif st.session_state.page == "dashboard":
 
     st.markdown("---")
 
-    st.session_state.candidate_name = st.text_input("Candidate Name")
+    st.session_state.candidate_name = st.text_input(
+        "Candidate Name",
+        value=st.session_state.candidate_name
+    )
     st.subheader("Select Persona")
-    st.session_state.p = st.selectbox(
-        "",
-        list(PERSONAS.keys())
-    )
-
+    st.session_state.p = st.selectbox("", list(PERSONAS.keys()))
+ 
     st.subheader("Select Course")
-
-    st.session_state.c = st.selectbox(
-        "",
-        COURSES
-    )
+    st.session_state.c = st.selectbox("", COURSES)
 
     if st.button("Start Training Session"):
-
         st.session_state.messages = []
         st.session_state.session_id = ""
         st.session_state.show_feedback = False
         st.session_state.page = "chat"
-
         st.rerun()
 # =========================================================
 # CHAT PAGE
@@ -685,6 +658,14 @@ elif st.session_state.page == "chat":
 # ADMIN PAGE
 # =========================================================
 elif st.session_state.page == "admin":
+
+    if st.session_state.role != "admin":
+        st.error("Access denied. Admins only.")
+        if st.button("Back to Dashboard"):
+            st.session_state.page = "dashboard"
+            st.rerun()
+        st.stop()
+        
     st.title("Admin Dashboard")
     st.markdown("### Training Analytics")
     try:
@@ -705,8 +686,8 @@ elif st.session_state.page == "admin":
                 history = get_session_conversation(selected_id)
                 if history:
                     for turn in history:
-                        st.markdown(f"**🧑 Salesperson:** {turn['salesperson']}")
-                        st.markdown(f"**🤖 Student:** {turn['student']}")
+                        st.markdown(f"**Salesperson:** {turn['salesperson']}")
+                        st.markdown(f"**Student:** {turn['student']}")
                         st.markdown(f"*{turn['timestamp']}*")
                         st.markdown("---")
                 else:
@@ -725,5 +706,5 @@ elif st.session_state.page == "admin":
     if st.button("Back to Home"):
         st.session_state.page = "dashboard"
         st.rerun()
-        
+                
 st.markdown("---")
