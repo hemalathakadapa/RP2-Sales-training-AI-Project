@@ -49,3 +49,28 @@ def rename_chat_session(session_id: str, title: str):
     response.raise_for_status()
 
     return response.json()
+
+def register_user(name, email, password):
+
+    response = requests.post(
+        f"{BASE_URL}/auth/register",
+        json={
+            "name": name,
+            "email": email,
+            "password": password
+        }
+    )
+
+    return response.json()
+
+def login_user(email, password):
+
+    response = requests.post(
+        f"{BASE_URL}/auth/login",
+        json={
+            "email": email,
+            "password": password
+        }
+    )
+
+    return response.json()
