@@ -420,9 +420,6 @@ if st.session_state.page == "landing":
                 padding: 24px 28px 16px 28px;
                 margin-bottom: 12px;
             ">
-                <p style="color:#555;font-size:13px;margin:0 0 16px 0;">
-                    Enter your admin password to continue.
-                </p>
             </div>
             """, unsafe_allow_html=True)
  
