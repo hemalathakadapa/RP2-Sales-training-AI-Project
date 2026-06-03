@@ -410,7 +410,7 @@ if st.session_state.page == "landing":
     # ── ADMIN POPUP — rendered AFTER the divider, outside all column contexts ──
     if st.session_state.get("show_admin_login"):
         # Use columns to constrain width: empty | popup | empty
-        _, popup_col, _ = st.columns([3, 2, 3])
+        _, popup_col, _ = st.columns([ 2, 3])
         with popup_col:
             st.markdown("""
             <div style="
