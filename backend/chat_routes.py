@@ -152,3 +152,19 @@ def get_chat_history(session_id: str, user_id: int):
 def get_sessions(user_id: int):
     from database import get_user_sessions
     return get_user_sessions(user_id)
+
+@router.get("/admin/users")
+def admin_users():
+    from database import get_all_users
+    return get_all_users()
+
+@router.get("/admin/user-sessions")
+def admin_user_sessions(user_id: int):
+    from database import get_user_sessions
+    return get_user_sessions(user_id)
+
+@router.get("/admin/history/{session_id}")
+def admin_history(session_id: str):
+    from database import get_conversation
+    history = get_conversation(session_id=session_id, limit=999)
+    return {"session_id": session_id, "history": history}

@@ -83,3 +83,8 @@ def reset_password(email, new_password):
     )
     response.raise_for_status()
     return response.json()
+
+def get_all_users():
+    response = requests.get(f"{BACKEND_URL}/chat/admin/users")
+    response.raise_for_status()
+    return response.json()

@@ -319,3 +319,64 @@ def session_belongs_to_user(session_id: str, user_id: int):
     conn.close()
 
     return result is not None
+
+def get_all_users():
+    conn = create_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT id, name, email
+        FROM users
+        ORDER BY name
+    """)
+
+    rows = cursor.fetchall()
+    conn.close()
+
+    return [
+        {
+            "id": row["id"],
+            "name": row["name"],
+            "email": row["email"]
+        }
+        for row in rows
+    ]
+
+def get_user_by_id(user_id: int):
+    conn = create_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT *
+        FROM users
+        WHERE id = ?
+    """, (user_id,))
+
+    row = cursor.fetchone()
+    conn.close()
+
+    return dict(row) if row else None
+
+def get_all_sessions_admin():
+    conn = create_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT
+            s.session_id,
+            s.title,
+            s.created_at,
+            s.updated_at,
+            u.id as user_id,
+            u.name,
+            u.email
+        FROM sessions s
+        LEFT JOIN users u
+        ON s.user_id = u.id
+        ORDER BY s.updated_at DESC
+    """)
+
+    rows = cursor.fetchall()
+    conn.close()
+
+    return [dict(row) for row in rows]

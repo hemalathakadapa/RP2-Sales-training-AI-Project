@@ -32,6 +32,7 @@ get_all_sessions = _mod.get_all_sessions
 get_session_conversation = _mod.get_session_conversation
 rename_chat_session = _mod.rename_chat_session
 get_user_sessions = _mod.get_user_sessions
+get_all_users = _mod.get_all_users
 
 _pc_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "persona_config.py")
 _spec2 = importlib.util.spec_from_file_location("persona_config", _pc_path)
@@ -817,42 +818,58 @@ elif st.session_state.page == "admin":
     st.title("Admin Dashboard")
     st.markdown("### Training Analytics")
     try:
-        sessions = get_all_sessions()
+        users = get_all_users()
  
-        if not sessions:
-            st.warning("No sessions found yet.")
+        if not users:
+            st.warning("No users found.")
         else:
-            # Build display labels
-            labels = {
-                f"{s['title']} | {s['session_id']} | {s['updated_at']}": s["session_id"]
+            user_options = {
+                f"{u['name']} ({u['email']})": u["id"]
+                for u in users
+            }
+            selected_user_label = st.selectbox(
+                "Select User",
+                list(user_options.keys())
+            )
+
+            selected_user_id = user_options[selected_user_label]
+            sessions = get_user_sessions(selected_user_id)
+        
+        if not sessions:
+            st.warning("No sessions for this user.")
+        else:
+            session_options = {
+                f"{s['title']} | {s['updated_at']}":
+                s["session_id"]
                 for s in sessions
             }
-            selected_label = st.selectbox("Select Session:", list(labels.keys()))
-            selected_id    = labels[selected_label]
- 
-            if st.button("Load Conversation"):
-                history = get_session_conversation(selected_id)
-                if history:
-                    for turn in history:
-                        st.markdown(f"**Salesperson:** {turn['salesperson']}")
-                        st.markdown(f"**Student:** {turn['student']}")
-                        st.markdown(f"*{turn['timestamp']}*")
-                        st.markdown("---")
-                else:
-                    st.warning("No conversation found for this session.")
- 
-            if st.button("Evaluate This Session"):
-                try:
-                    eval_result = get_evaluation(selected_id, mode="full")
-                    st.json(eval_result.get("result", {}))
-                except Exception as e:
-                    st.error(f"Evaluation error: {e}")
- 
+
+            selected_session_label = st.selectbox("Select Session", list(session_options.keys()))
+            selected_session_id = session_options[selected_session_label]
+
+            col1, col2 = st.columns(2)
+            with col1:
+                if st.button("Load Conversation"):
+                    history = get_session_conversation(selected_session_id, selected_user_id)
+                    if history:
+                        st.subheader("Conversation History")
+                        for turn in history:
+                            st.markdown(f"**Salesperson:** " f"{turn['salesperson']}")
+                            st.markdown(f"**Student:** " f"{turn['student']}")
+                            st.caption(turn["timestamp"])
+                            st.divider()
+                    else:
+                            st.warning("No conversation found.")
+
+            with col2:
+                if st.button("Evaluate This Session"):
+                        eval_result = get_evaluation(selected_session_id, mode="full")
+                        st.subheader("Evaluation Result")
+                        st.json(eval_result.get("result", {}))
+
     except Exception as e:
-        st.error(f"Could not load sessions: {e}")
+        st.error(f"Could not load admin dashboard: {e}")
 
     if st.button("Back to Home"):
         st.session_state.page = "dashboard"
         st.rerun()
-                
-st.markdown("---")
