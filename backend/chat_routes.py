@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
 from b_config import USE_LLM
-from database import create_session
+from database import create_session,  get_user_dashboard
 from fastapi import HTTPException
 import random
 import string
@@ -168,3 +168,8 @@ def admin_history(session_id: str):
     from database import get_conversation
     history = get_conversation(session_id=session_id, limit=999)
     return {"session_id": session_id, "history": history}
+
+@router.get("/dashboard")
+def dashboard(user_id: int):
+    dashboard_data = get_user_dashboard(user_id)
+    return dashboard_data

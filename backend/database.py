@@ -1,4 +1,5 @@
 import sqlite3
+import os
 from datetime import datetime
 from zoneinfo import ZoneInfo
 from b_config import DB_PATH
@@ -11,6 +12,7 @@ def ist_now():
 
 def create_connection():
     """Create and return a database connection"""
+    print("DB PATH =", os.path.abspath(DB_PATH))
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row  
     return conn
@@ -380,3 +382,47 @@ def get_all_sessions_admin():
     conn.close()
 
     return [dict(row) for row in rows]
+
+def get_user_dashboard(user_id: int):
+
+    conn = create_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT 
+            s.session_id,
+            f.final_score
+        FROM feedback f
+        JOIN sessions s
+        ON f.session_id = s.session_id
+        WHERE s.user_id = ?
+        ORDER BY f.timestamp ASC
+    """, (user_id,))
+
+    rows = cursor.fetchall()
+    conn.close()
+
+    data = []
+    scores = []
+
+    for row in rows:
+
+        if row["final_score"] is not None:
+
+            data.append({
+                "session_id": row["session_id"][-6:],   # shortened id
+                "score": row["final_score"]
+            })
+
+            scores.append(row["final_score"])
+
+    avg_score = (
+        round(sum(scores) / len(scores), 1)
+        if scores else 0
+    )
+
+    return {
+        "average_score": avg_score,
+        "sessions_completed": len(scores),
+        "performance": data
+    }

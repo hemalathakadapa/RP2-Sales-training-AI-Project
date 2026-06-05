@@ -14,6 +14,7 @@ import tempfile
 import datetime
 import base64
 from gtts import gTTS
+import pandas as pd
 from streamlit_mic_recorder import speech_to_text
 import streamlit.components.v1 as components
 import importlib.util, os
@@ -33,6 +34,7 @@ get_session_conversation = _mod.get_session_conversation
 rename_chat_session = _mod.rename_chat_session
 get_user_sessions = _mod.get_user_sessions
 get_all_users = _mod.get_all_users
+get_user_dashboard = _mod.get_user_dashboard
 
 _pc_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "persona_config.py")
 _spec2 = importlib.util.spec_from_file_location("persona_config", _pc_path)
@@ -611,13 +613,26 @@ elif st.session_state.page == "signup":
 elif st.session_state.page == "dashboard":
 
     st.title(f"Welcome {st.session_state.user_name}")
-    col1,col2,col3 = st.columns(3)
+    user_id = st.session_state.user_id
+    dashboard = get_user_dashboard(user_id)
 
-    col1.metric("Sessions", "15")
-    col2.metric("Average Score", "84%")
-    col3.metric("Completed Trainings", "9")
+    col1, col2 = st.columns(2)
+    col1.metric("Average Score", f"{dashboard['average_score']}%")
+    col2.metric("Sessions Completed", dashboard["sessions_completed"])
 
     st.markdown("---")
+
+    df = pd.DataFrame(dashboard["performance"])
+
+    if not df.empty:
+            df.columns = ["Session ID", "Score"]
+
+    st.subheader("Performance Trend")
+
+    if not df.empty:
+      st.line_chart(df.set_index("Session ID"))
+    else:
+     st.info("No completed sessions yet.")
     
     st.subheader("Select Persona")
     st.session_state.p = st.selectbox("", list(PERSONAS.keys()))
@@ -870,6 +885,12 @@ elif st.session_state.page == "admin":
     except Exception as e:
         st.error(f"Could not load admin dashboard: {e}")
 
-    if st.button("Back to Home"):
-        st.session_state.page = "dashboard"
+    st.markdown("---")
+
+    if st.button("Admin Logout", use_container_width=True):
+        st.session_state.logged_in = False
+        st.session_state.role = None
+        st.session_state.user_id = None
+        st.session_state.username = None
+        st.session_state.page = "landing"
         st.rerun()

@@ -88,3 +88,8 @@ def get_all_users():
     response = requests.get(f"{BACKEND_URL}/chat/admin/users")
     response.raise_for_status()
     return response.json()
+
+def get_user_dashboard(user_id: int):
+    response = requests.get(f"{BACKEND_URL}/chat/dashboard", params={"user_id": user_id})
+    response.raise_for_status()
+    return response.json()
