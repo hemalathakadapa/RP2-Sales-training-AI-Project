@@ -36,13 +36,15 @@ def create_tables():
     # ✅ Conversations table with all needed columns
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS conversations (
-            id          INTEGER PRIMARY KEY AUTOINCREMENT,
-            session_id  TEXT    NOT NULL,      
-            salesperson TEXT    NOT NULL,
-            student     TEXT    NOT NULL,
-            persona     TEXT    DEFAULT '',
-            course      TEXT    DEFAULT '',
-            timestamp   TEXT    
+            id            INTEGER PRIMARY KEY AUTOINCREMENT,
+            session_id    TEXT    NOT NULL,      
+            salesperson   TEXT    NOT NULL,
+            student       TEXT    NOT NULL,
+            persona       TEXT    DEFAULT '',
+            course        TEXT    DEFAULT '',
+            qualification TEXT    DEFAULT '',
+            subject       TEXT    DEFAULT '',
+            timestamp     TEXT    
         )
     """)
 
@@ -77,6 +79,14 @@ def create_tables():
         print("✅ Migrated: added user_id to sessions")
     except Exception:
         pass  # column already exists, ignore
+
+    for col in ["qualification", "subject"]:
+        try:
+            cursor.execute(f"ALTER TABLE conversations ADD COLUMN {col} TEXT DEFAULT ''")
+            conn.commit()
+            print(f"✅ Migrated: added {col} to conversations")
+        except Exception:
+            pass  # column already exists
 
     conn.commit()
     conn.close()
@@ -175,16 +185,18 @@ def save_conversation(
     salesperson_msg: str,
     student_msg: str,
     persona: str = "",
-    course: str = ""
+    course: str = "",
+    qualification: str = "",
+    subject: str = ""
 ):
     """Save one conversation turn to database"""
     conn = create_connection()
     cursor = conn.cursor()
 
     cursor.execute("""
-        INSERT INTO conversations (session_id, salesperson, student, persona, course, timestamp)
-        VALUES (?, ?, ?, ?, ?, ?)
-    """, (session_id, salesperson_msg, student_msg, persona, course, ist_now()))
+        INSERT INTO conversations (session_id, salesperson, student, persona, course, qualification, subject, timestamp)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    """, (session_id, salesperson_msg, student_msg, persona, course, qualification, subject, ist_now()))
 
     conn.commit()
     conn.close()
