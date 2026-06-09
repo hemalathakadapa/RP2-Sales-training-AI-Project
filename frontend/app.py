@@ -630,38 +630,37 @@ elif st.session_state.page == "dashboard":
     course_metrics = get_course_metrics(user_id)
 
     if course_metrics:
+
         cards_html = """
-        <div style="
-            display:flex;
-            gap:20px;
-            flex-wrap:wrap;
-        ">
+        <div style="display:flex; gap:20px; flex-wrap:wrap;">
         """
 
         for item in course_metrics:
+
             cards_html += f"""
             <div style="
                 border:2px solid #D1D5DB;
-                border-radius:10px;
-                padding:18px;
+                border-radius:12px;
+                padding:20px;
                 min-width:220px;
+                background:rgba(255,255,255,0.03);
             ">
-                <h4>{item['course']}</h4>
+                <h3>{item['course']}</h3>
 
-                <p>
-                    Sessions: {item['sessions']}
-                </p>
+                <div>
+                    Sessions: <b>{item['sessions']}</b>
+                </div>
 
-                <p>
-                    Avg: {item['average_score']}%
-                </p>
+                <div style="margin-top:10px;">
+                    Avg Score: <b>{item['average_score']}%</b>
+                </div>
             </div>
             """
 
         cards_html += "</div>"
 
-        st.markdown(cards_html, unsafe_allow_html=True)
-
+        st.html(cards_html)
+        
     qualification_options = [
         "12th Pass",
         "Diploma",
@@ -925,6 +924,27 @@ elif st.session_state.page == "admin":
             with col_b:
                 st.metric("Sessions Completed", dashboard["sessions_completed"])
 
+            st.markdown("### Course Performance")
+
+            course_metrics = get_course_metrics(selected_user_id)
+            if course_metrics:
+                cols = st.columns(min(len(course_metrics), 4))
+                for i, item in enumerate(course_metrics):
+                    with cols[i % len(cols)]:
+                        st.html(f"""
+                            <div style="
+                                border:1px solid #444;
+                                border-radius:10px;
+                                padding:15px;
+                                margin-bottom:10px;
+                                background-color:rgba(255,255,255,0.03);
+                            ">
+                                <h4>{item['course']}</h4>
+                                <p><b>Sessions:</b> {item['sessions']}</p>
+                                <p><b>Avg Score:</b> {item['average_score']}%</p>
+                            </div>
+                        """)
+
             df = pd.DataFrame(dashboard["performance"])
             if not df.empty:
                 st.subheader("Performance Growth")
@@ -957,48 +977,45 @@ elif st.session_state.page == "admin":
                                 st.write(turn["student"])
                             st.caption(turn["timestamp"])         
                     else:
-                            st.warning("No conversation found.")
+                        st.warning("No conversation found.")
 
             with col2:
                 if st.button("Evaluate This Session"):
-                        eval_result = get_evaluation(selected_session_id, mode="full")
-                        result = eval_result.get("result", {})
-                        st.subheader("Evaluation Result")
+                    eval_result = get_evaluation(selected_session_id, mode="full")
+                    result = eval_result.get("result", {})
+                    st.subheader("Evaluation Result")
                         
-                        col1, col2, col3 = st.columns(3)
-                        with col1:
-                                st.metric("Final Score", f"{result.get('final_score', 0)}%")
-                        with col2:
-                                st.metric("Keyword Score", f"{result.get('keyword_score', 0)}%")
-                        with col3:
-                                st.metric("Tone Score", f"{result.get('tone_score', 0)}%")
+                    col1, col2, col3 = st.columns(3)
+                    with col1:
+                        st.metric("Final Score", f"{result.get('final_score', 0)}%")
+                    with col2:
+                        st.metric("Keyword Score", f"{result.get('keyword_score', 0)}%")
+                    with col3:
+                        st.metric("Tone Score", f"{result.get('tone_score', 0)}%")
 
-                        skills = result.get("skill_scores", {})
-                        if skills:
-                            st.subheader("Skill Breakdown")
-                            skill_df = pd.DataFrame({
-                                "Skill": list(skills.keys()),
-                                "Score": list(skills.values())
-                            })
-                            st.bar_chart(skill_df.set_index("Skill"))
+                    skills = result.get("skill_scores", {})
+                    if skills:
+                        st.subheader("Skill Breakdown")
+                        skill_df = pd.DataFrame({"Skill": list(skills.keys()), "Score": list(skills.values())})
+                        st.bar_chart(skill_df.set_index("Skill"))
 
-                        strengths = result.get("strengths", [])
-                        if strengths:
-                            st.subheader("Strengths")
-                            for item in strengths:
-                                st.success(item)
+                    strengths = result.get("strengths", [])
+                    if strengths:
+                        st.subheader("Strengths")
+                        for item in strengths:
+                            st.success(item)
 
-                        weaknesses = result.get("weaknesses", [])
-                        if weaknesses:
-                            st.subheader("Areas for Improvement")
-                            for item in weaknesses:
-                                st.warning(item)
+                    weaknesses = result.get("weaknesses", [])
+                    if weaknesses:
+                        st.subheader("Areas for Improvement")
+                        for item in weaknesses:
+                            st.warning(item)
 
-                        suggestions = result.get("suggestions", [])
-                        if suggestions:
-                            st.subheader("Suggestions")
-                            for item in suggestions:
-                                st.info(item)
+                    suggestions = result.get("suggestions", [])
+                    if suggestions:
+                        st.subheader("Suggestions")
+                        for item in suggestions:
+                            st.info(item)
 
     except Exception as e:
         st.error(f"Could not load admin dashboard: {e}")
