@@ -138,16 +138,16 @@ def get_response(user_message,
 
         for c in courses:
 
-            if c in msg:
+    if c in msg and conversation_state["stage"] == "course":
 
-                conversation_state["course"] = c
+        conversation_state["course"] = c
 
-                conversation_state["stage"] = "details"
+        conversation_state["stage"] = "details"
 
-                return (
-                    f"{c.title()} sounds interesting. "
-                    "Could you explain this course in detail?"
-                )
+        return (
+            f"Thank you. {c.title()} sounds interesting. "
+            "Could you explain this course in detail?"
+        )
 
         return (
             "Could you tell me which course you're introducing today?"
