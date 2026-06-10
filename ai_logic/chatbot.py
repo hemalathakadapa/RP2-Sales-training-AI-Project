@@ -70,25 +70,32 @@ def get_response(user_message,
     # Greeting
     # ----------------------------------
 
-    if conversation_state["stage"] == "greeting":
+   if conversation_state["stage"] == "rp2":
 
-        if any(word in msg for word in [
-            "hi",
-            "hello",
-            "hey",
-            "welcome",
-            "good morning",
-            "good evening",
-            "good afternoon"
-        ]):
+    rp2_keywords = [
+        "rp2",
+        "training",
+        "academy",
+        "institute",
+        "company",
+        "education",
+        "platform",
+        "learning"
+    ]
 
-            conversation_state["stage"] = "rp2"
+    if any(word in msg for word in rp2_keywords):
 
-            return (
-                "Hi! Thank you for welcoming me. "
-                "My name is Rahul. It's nice to meet you. "
-                "Before we begin, could you tell me what RP2 is all about?"
-            )
+        conversation_state["stage"] = "course"
+
+        return (
+            "Thank you for explaining RP2. "
+            "Which course are you introducing today?"
+        )
+
+    return (
+        "I'm still not very clear about RP2. "
+        "Could you tell me a little more about what RP2 does?"
+    )
 
     # ----------------------------------
     # STEP 2
