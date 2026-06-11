@@ -137,21 +137,15 @@ def get_response(user_message,
         ]
 
         for c in courses:
+            if c in msg and conversation_state["stage"] == "course":
+                conversation_state["course"] = c
+                conversation_state["stage"] = "details"
+                return (
+                    f"Thank you. {c.title()} sounds interesting. "
+                    "Could you explain this course in detail?"
+                )
 
-    if c in msg and conversation_state["stage"] == "course":
-
-        conversation_state["course"] = c
-
-        conversation_state["stage"] = "details"
-
-        return (
-            f"Thank you. {c.title()} sounds interesting. "
-            "Could you explain this course in detail?"
-        )
-
-        return (
-            "Could you tell me which course you're introducing today?"
-        )
+        return "Could you tell me which course you're introducing today?"
 
     # ----------------------------------
     # STEP 4
@@ -161,23 +155,14 @@ def get_response(user_message,
     if conversation_state["stage"] == "details":
 
         questions = [
-
             "What topics are covered in the syllabus?",
-
             "How long is the course?",
-
             "Will I work on real-world projects?",
-
             "Who are the trainers?",
-
             "Do you provide placement assistance?",
-
             "Will I receive a certificate?",
-
             "What are the course fees?",
-
             "Is this course suitable for beginners?"
-
         ]
 
         return random.choice(questions)
@@ -187,7 +172,6 @@ def get_response(user_message,
     # ----------------------------------
 
     detected = detect_persona(user_message)
-
     return random.choice(student_personas[detected])
 
 
@@ -196,5 +180,4 @@ def get_response(user_message,
 # ----------------------------------
 
 def chatbot_response(message):
-
     return get_response(message)
