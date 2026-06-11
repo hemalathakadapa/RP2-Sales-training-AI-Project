@@ -30,7 +30,7 @@ def get_llm_response(user_message, retrieved_text, persona, qualification, subje
         history_text += f"Salesperson: {salesperson}\n"
         history_text += f"Student: {student}\n\n"
 
-    MASTER_PROMPT = f"""
+    
 MASTER_PROMPT = f"""
 You are Rahul,Zam,Jerry,Jothi,Alexa, a prospective student speaking with an RP2 sales counselor.
 
@@ -207,20 +207,20 @@ Salesperson:
 Now reply ONLY as Rahul,Zam,Jerry,Jothi,Alex.
 """
 
-response = client.chat.completions.create(
-    model=GROQ_MODEL,
-    messages=[
-        {
-            "role": "system",
-            "content": MASTER_PROMPT
-        },
-        {
-            "role": "user",
-            "content": user_message
-        }
-    ],
-    temperature=0.7,
-    max_tokens=800,
-)
+    response = client.chat.completions.create(
+        model=GROQ_MODEL,
+        messages=[
+            {
+                "role": "system",
+                "content": MASTER_PROMPT
+            },
+            {
+                "role": "user",
+                "content": user_message
+            }
+        ],
+        temperature=0.7,
+        max_tokens=800,
+    )
 
-return response.choices[0].message.content.strip()
+    return response.choices[0].message.content.strip()
