@@ -112,7 +112,10 @@ student_gender = response["student_gender"]
         update_session_timestamp(session_id)
 
         # 🔊 Generate voice
-        audio_file = convert_text_to_speech(response_text)
+        audio_file = convert_text_to_speech(
+    text=response_text,
+    gender=student_gender
+)
         audio_url  = f"/voice/audio/{audio_file}" if audio_file else None
 
         # ✅ Return response + session_id back to frontend
