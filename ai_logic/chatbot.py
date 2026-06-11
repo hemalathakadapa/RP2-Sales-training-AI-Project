@@ -1,38 +1,39 @@
 import random
 
+# ----------------------------------
+# Conversation State
+# ----------------------------------
+
+conversation_state = {
+    "stage": "greeting"
+}
+
+# ----------------------------------
+# Student Personas
+# ----------------------------------
+
 student_personas = {
 
     "confused_student": [
-        "I don't know which course is better for my future.",
-        "I'm confused between AI and Data Science.",
-        "Will I get placement after this course?",
-        "Is coding difficult?",
-        "I am from commerce background. Can I study AI?",
-        "My parents are asking whether this field has future scope."
+        "I'm still confused about my career.",
+        "Can you help me choose the right course?"
     ],
 
     "it_student": [
-        "I'm from IT background.",
-        "Which course has highest salary package?",
-        "Should I choose AI or Cybersecurity?",
-        "Which field is better for future jobs?",
-        "I already know basic coding."
+        "I'm from an IT background.",
+        "I already know some programming."
     ],
 
     "non_it_student": [
-        "I don't know coding.",
-        "Can non-technical students join?",
-        "Will it be difficult for beginners?",
-        "Which course is easiest to start?",
-        "Can I get job without coding knowledge?"
+        "I'm from a non-technical background.",
+        "I don't know coding."
     ],
 
     "career_switcher": [
-        "I'm planning career change.",
-        "Can I switch from mechanical to AI?",
-        "How long does it take to get job ready?",
-        "Do companies accept non-IT students?"
+        "I'm planning to switch my career.",
+        "Can I move into IT?"
     ]
+
 }
 
 
@@ -52,29 +53,148 @@ def detect_persona(message):
     return "confused_student"
 
 
-def get_response(user_message, persona =None, session_id=None, course= None, history=None):
+# ----------------------------------
+# Main Chatbot Logic
+# ----------------------------------
+
+def get_response(user_message,
+                 persona=None,
+                 session_id=None,
+                 course=None,
+                 history=None):
+
+    msg = user_message.lower()
+
+    # ----------------------------------
+    # STEP 1
+    # Greeting
+    # ----------------------------------
+
+   if conversation_state["stage"] == "rp2":
+
+    rp2_keywords = [
+        "rp2",
+        "training",
+        "academy",
+        "institute",
+        "company",
+        "education",
+        "platform",
+        "learning"
+    ]
+
+    if any(word in msg for word in rp2_keywords):
+
+        conversation_state["stage"] = "course"
+
+        return (
+            "Thank you for explaining RP2. "
+            "Which course are you introducing today?"
+        )
+
+    return (
+        "I'm still not very clear about RP2. "
+        "Could you tell me a little more about what RP2 does?"
+    )
+
+    # ----------------------------------
+    # STEP 2
+    # Learn RP2
+    # ----------------------------------
+
+    if conversation_state["stage"] == "rp2":
+
+        conversation_state["stage"] = "course"
+
+        return (
+            "Thank you for explaining RP2. "
+            "Which course are you introducing today?"
+        )
+
+    # ----------------------------------
+    # STEP 3
+    # Detect Course
+    # ----------------------------------
+
+    if conversation_state["stage"] == "course":
+
+        courses = [
+
+            "data science",
+
+            "data analytics",
+
+            "agentic ai",
+
+            "artificial intelligence",
+
+            "cyber security",
+
+            "cybersecurity",
+
+            "machine learning"
+
+        ]
+
+        for c in courses:
+
+    if c in msg and conversation_state["stage"] == "course":
+
+        conversation_state["course"] = c
+
+        conversation_state["stage"] = "details"
+
+        return (
+            f"Thank you. {c.title()} sounds interesting. "
+            "Could you explain this course in detail?"
+        )
+
+        return (
+            "Could you tell me which course you're introducing today?"
+        )
+
+    # ----------------------------------
+    # STEP 4
+    # Ask Questions
+    # ----------------------------------
+
+    if conversation_state["stage"] == "details":
+
+        questions = [
+
+            "What topics are covered in the syllabus?",
+
+            "How long is the course?",
+
+            "Will I work on real-world projects?",
+
+            "Who are the trainers?",
+
+            "Do you provide placement assistance?",
+
+            "Will I receive a certificate?",
+
+            "What are the course fees?",
+
+            "Is this course suitable for beginners?"
+
+        ]
+
+        return random.choice(questions)
+
+    # ----------------------------------
+    # Fallback
+    # ----------------------------------
 
     detected = detect_persona(user_message)
 
-    responses = student_personas[detected]
+    return random.choice(student_personas[detected])
 
-    # dynamic reactions
 
-    if "salary" in user_message.lower():
-        return "What salary can I expect after completing the course?"
+# ----------------------------------
+# Wrapper
+# ----------------------------------
 
-    if "placement" in user_message.lower():
-        return "Do RP2 provide placement support?"
-
-    if "ai" in user_message.lower():
-        return "I heard AI needs strong coding skills. Is that true?"
-
-    if "data science" in user_message.lower():
-        return "Is Data Science easier than AI?"
-
-    if "cybersecurity" in user_message.lower():
-        return "Does Cybersecurity need programming knowledge?"
-
-    return random.choice(responses)
 def chatbot_response(message):
+
     return get_response(message)
