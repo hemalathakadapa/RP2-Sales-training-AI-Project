@@ -3,5 +3,5 @@ streamlit-mic-recorder
 gtts
 requests
 python-dotenv
-groq
+groq>=0.9.0
 transformers
