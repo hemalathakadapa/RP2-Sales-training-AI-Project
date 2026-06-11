@@ -265,8 +265,15 @@ Always use the same name throughout this conversation.
             max_tokens=800,
         )
 
-        return response.choices[0].message.content.strip()
-
+        return {
+    "response": response.choices[0].message.content.strip(),
+    "student_name": student_name,
+    "student_gender": "female" if student_name in ["Aisha", "Priya", "Ananya", "Meera"] else "male"
+}
     except Exception as e:
-        print("LLM ERROR:", e)
-        return f"LLM ERROR: {e}"
+    print("LLM ERROR:", e)
+    return {
+        "response": f"LLM ERROR: {e}",
+        "student_name": student_name,
+        "student_gender": "female" if student_name in ["Aisha", "Priya", "Ananya", "Meera"] else "male"
+    }
