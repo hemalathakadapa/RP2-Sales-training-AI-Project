@@ -282,18 +282,36 @@ Conversation History
 
 {history_text}
 
-IMPORTANT:
-The conversation history is the source of truth.
+history_text = ""
 
-Never ignore it.
+for turn in history[-5:]:
+    salesperson = turn.get("salesperson", "")
+    student = turn.get("student", "")
 
-If RP2 has already been explained,
-never ask about RP2 again.
+    history_text += f"Salesperson: {salesperson}\n"
+    history_text += f"Student: {student}\n\n"
 
-If the course has already been introduced,
-never ask for the course again.
+history_lower = history_text.lower()
 
-Continue naturally from the latest conversation.
+conversation_started = len(history) > 0
+
+rp2_explained = (
+    "rp2" in history_lower and (
+        "institute" in history_lower
+        or "academy" in history_lower
+        or "training" in history_lower
+    )
+)
+
+course_introduced = any(course in history_lower for course in [
+    "data science",
+    "agentic ai",
+    "artificial intelligence",
+    "data analytics",
+    "machine learning",
+    "cyber security",
+    "cybersecurity"
+])
 
 Until then:
 - Keep asking only about RP2.
