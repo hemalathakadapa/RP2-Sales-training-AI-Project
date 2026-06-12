@@ -96,11 +96,24 @@ def create_session(session_id: str, title: str, user_id: int):
     cursor = conn.cursor(cursor_factory=RealDictCursor)
 
     cursor.execute("""
-        INSERT INTO sessions (session_id, user_id, title, created_at, updated_at)
-        VALUES (%s, %s, %s, %s, %s)
-        ON CONFLICT (session_id) DO NOTHING
-    """, (session_id, user_id, title, ist_now(), ist_now()))
-
+    INSERT INTO sessions (
+        session_id,
+        user_id,
+        title,
+        conversation_stage,
+        created_at,
+        updated_at
+    )
+    VALUES (%s, %s, %s, %s, %s, %s)
+    ON CONFLICT (session_id) DO NOTHING
+""", (
+    session_id,
+    user_id,
+    title,
+    "greeting",
+    ist_now(),
+    ist_now()
+))
     conn.commit()
     conn.close()
 
@@ -530,3 +543,39 @@ def update_admin_password(email, new_password):
     conn.close()
 
     return updated > 0
+    def get_conversation_stage(session_id: str):
+    conn = create_connection()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+
+    cursor.execute("""
+        SELECT conversation_stage
+        FROM sessions
+        WHERE session_id = %s
+    """, (session_id,))
+
+    row = cursor.fetchone()
+    conn.close()
+
+    if row:
+        return row["conversation_stage"]
+
+    return "greeting"
+
+
+def update_conversation_stage(session_id: str, stage: str):
+    conn = create_connection()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+
+    cursor.execute("""
+        UPDATE sessions
+        SET conversation_stage=%s,
+            updated_at=%s
+        WHERE session_id=%s
+    """, (
+        stage,
+        ist_now(),
+        session_id
+    ))
+
+    conn.commit()
+    conn.close()
