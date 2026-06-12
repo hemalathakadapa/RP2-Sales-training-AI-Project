@@ -22,17 +22,17 @@ def create_tables():
     )
     """)
 
-    # SESSIONS
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS sessions (
-        session_id TEXT PRIMARY KEY,
-        user_id INTEGER,
-        title TEXT,
-        created_at TEXT,
-        updated_at TEXT
-    )
-    """)
-
+   # SESSIONS
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS sessions (
+    session_id TEXT PRIMARY KEY,
+    user_id INTEGER,
+    title TEXT,
+    conversation_stage TEXT DEFAULT 'greeting',
+    created_at TEXT,
+    updated_at TEXT
+)
+""")
     # CONVERSATIONS
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS conversations (
