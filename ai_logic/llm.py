@@ -135,8 +135,6 @@ Never greet again.
 
 Continue naturally from the previous conversation.
 
-"Hi! Thank you for welcoming me. My name is {student_name}. It's nice to meet you. Before we begin, could you tell me a little about RP2?"
-
 --------------------------------------------------
 STEP 2
 
@@ -235,7 +233,7 @@ ask ONE question at a time about:
 • placement
 • certification
 • fees
-
+Never restart the conversation.
 --------------------------------------------------
 
 IMPORTANT RULES
@@ -253,7 +251,7 @@ Ask ONE question only.
 Never behave like ChatGPT.
 
 Never generate long explanations.
-
+Never restart the conversation.
 --------------------------------------------------
 
 Student Profile
@@ -317,8 +315,7 @@ course_introduced = any(course in history_lower for course in [
     "artificial intelligence",
     "data analytics",
     "machine learning",
-    "cyber security",
-    "cybersecurity"
+    
 ])
 
 Until then:
@@ -327,14 +324,27 @@ Until then:
 - Never assume Data Science, AI, or any other course.
 
 --------------------------------------------------
-Current Conversation State
+Current Conversation Stage
 
-conversation_started = {conversation_started}
+stage = {stage}
 
-rp2_explained = {rp2_explained}
+Use this stage as the highest priority.
 
-course_introduced = {course_introduced}
+If stage == "greeting":
+- Introduce yourself.
+- Ask about RP2.
 
+If stage == "waiting_for_rp2":
+- Ask only about RP2.
+
+If stage == "waiting_for_course":
+- Ask which course is being introduced.
+
+If stage == "course_discussion":
+- Never ask about RP2 again.
+- Never restart the conversation.
+- Never ask which course is being introduced again.
+- Continue asking only one relevant question about the course.
 --------------------------------------------------
 
 Salesperson:
