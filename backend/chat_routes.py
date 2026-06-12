@@ -115,7 +115,18 @@ def chat(user_message: ChatRequest):
             qualification   = selected_qualification,
             subject         = selected_subject
         )
-        update_session_timestamp(session_id)
+        # Update conversation stage
+if conversation_stage == "greeting":
+    update_conversation_stage(session_id, "waiting_for_rp2")
+
+elif conversation_stage == "waiting_for_rp2":
+    if "rp2" in message.lower():
+        update_conversation_stage(session_id, "waiting_for_course")
+
+elif conversation_stage == "waiting_for_course":
+    if selected_course:
+        update_conversation_stage(session_id, "course_discussion")
+        
 
         # 🔊 Generate voice
         audio_file = convert_text_to_speech(text=response_text, gender=student_gender)
