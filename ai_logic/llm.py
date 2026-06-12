@@ -45,7 +45,15 @@ if client:
 else:
     print("⚠️ No API key")
 
-def get_llm_response(user_message, retrieved_text, persona, qualification, subject, history):
+def get_llm_response(
+    user_message,
+    retrieved_text,
+    persona,
+    qualification,
+    subject,
+    history,
+    stage
+):
     if client is None:
         return "I'm exploring course options. Can you tell me more?"
     
