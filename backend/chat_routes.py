@@ -67,8 +67,8 @@ def chat(user_message: ChatRequest):
         # ✅ Get THIS student's history
         conversation_history = get_conversation(session_id)
         print("========== HISTORY ==========")
-print(conversation_history)
-print("=============================")
+        print(conversation_history)
+        print("=============================")
     
         # 🔍 RAG search
         retrieved_text = search(message)
@@ -79,17 +79,17 @@ print("=============================")
 
             if USE_LLM:
                 response = get_llm_response(
-    user_message=message,
-    retrieved_text=f"Course: {selected_course}\n{retrieved_text}",
-    persona=selected_persona,
-    qualification=selected_qualification,
-    subject=selected_subject,
-    history=conversation_history
-)
+                    user_message=message,
+                    retrieved_text=f"Course: {selected_course}\n{retrieved_text}",
+                    persona=selected_persona,
+                    qualification=selected_qualification,
+                    subject=selected_subject,
+                    history=conversation_history
+                )
 
-response_text = response["response"]
-student_name = response["student_name"]
-student_gender = response["student_gender"]
+                response_text = response["response"]
+                student_name = response["student_name"]
+                student_gender = response["student_gender"]
             else:
                 response_text = fallback_response(message,selected_course,retrieved_text)
         else:
@@ -114,10 +114,7 @@ student_gender = response["student_gender"]
         update_session_timestamp(session_id)
 
         # 🔊 Generate voice
-        audio_file = convert_text_to_speech(
-    text=response_text,
-    gender=student_gender
-)
+        audio_file = convert_text_to_speech(text=response_text, gender=student_gender)
         audio_url  = f"/voice/audio/{audio_file}" if audio_file else None
 
         # ✅ Return response + session_id back to frontend
