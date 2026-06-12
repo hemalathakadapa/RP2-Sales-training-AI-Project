@@ -81,7 +81,7 @@ def chat(user_message: ChatRequest):
             retrieved_text = top_result.get("answer", "")
 
             if USE_LLM:
-                response_text = get_llm_response(
+                response = get_llm_response(
                     user_message=message,
                     retrieved_text=f"Course: {selected_course}\n{retrieved_text}",
                     persona=selected_persona,
@@ -143,7 +143,7 @@ def chat(user_message: ChatRequest):
     except Exception as e:
         print("Error:", e)
         return {"error": "Something went wrong in the backend"}
-    
+
 
 @router.get("/history/{session_id}")
 def get_chat_history(session_id: str, user_id: int):
