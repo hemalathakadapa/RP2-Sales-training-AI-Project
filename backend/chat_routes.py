@@ -106,7 +106,7 @@ def chat(user_message: ChatRequest):
             )
 
         # ✅ Save THIS student's conversation
-        save_conversation(
+              save_conversation(
             session_id      = session_id,
             salesperson_msg = message,
             student_msg     = response_text,
@@ -115,17 +115,23 @@ def chat(user_message: ChatRequest):
             qualification   = selected_qualification,
             subject         = selected_subject
         )
+
         # Update conversation stage
-if conversation_stage == "greeting":
-    update_conversation_stage(session_id, "waiting_for_rp2")
+        if conversation_stage == "greeting":
+            update_conversation_stage(session_id, "waiting_for_rp2")
 
-elif conversation_stage == "waiting_for_rp2":
-    if "rp2" in message.lower():
-        update_conversation_stage(session_id, "waiting_for_course")
+        elif conversation_stage == "waiting_for_rp2":
+            if "rp2" in message.lower():
+                update_conversation_stage(session_id, "waiting_for_course")
 
-elif conversation_stage == "waiting_for_course":
-    if selected_course:
-        update_conversation_stage(session_id, "course_discussion")
+        elif conversation_stage == "waiting_for_course":
+            if selected_course:
+                update_conversation_stage(session_id, "course_discussion")
+
+        # 🔊 Generate voice
+        audio_file = convert_text_to_speech(text=response_text, gender=student_gender)
+        audio_url  = f"/voice/audio/{audio_file}" if audio_file else None
+
         
 
         # 🔊 Generate voice
