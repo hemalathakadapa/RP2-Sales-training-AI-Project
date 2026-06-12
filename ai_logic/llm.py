@@ -1,32 +1,16 @@
 import os
+import random
 from dotenv import load_dotenv
 from groq import Groq
-import random
-MALE_NAMES = [
-    "Rahul",
-    "Arjun",
-    "Karthik",
-    "Aditya",
-    "Vikram",
-    "Rohan"
-]
 
-FEMALE_NAMES = [
-    "Aisha",
-    "Priya",
-    "Ananya",
-    "Meera"
-]
-
+# Constants
+MALE_NAMES = ["Rahul", "Arjun", "Karthik", "Aditya", "Vikram", "Rohan"]
+FEMALE_NAMES = ["Aisha", "Priya", "Ananya", "Meera"]
 ALL_NAMES = MALE_NAMES + FEMALE_NAMES
 
+# Initial selection
 student_name = random.choice(ALL_NAMES)
-
-student_gender = (
-    "male"
-    if student_name in MALE_NAMES
-    else "female"
-)
+student_gender = "female" if student_name in FEMALE_NAMES else "male"
 
 load_dotenv()
 
@@ -36,14 +20,13 @@ def get_client():
         return Groq(api_key=key)
     return None
 
-# ✅ Always fetch fresh from environment
 client = get_client()
 GROQ_MODEL = "llama-3.1-8b-instant"
 
 if client:
     print("✅ LLM ready")
 else:
-    print("⚠️ No API key")
+    print("⚠️ No API key found")
 
 def get_llm_response(
     user_message,
@@ -55,333 +38,101 @@ def get_llm_response(
     stage
 ):
     if client is None:
-        return "I'm exploring course options. Can you tell me more?"
-    
+        return {"response": "I'm exploring course options. Can you tell me more?", "student_name": student_name}
+
+    # 1. Build history text from the list of dictionaries
     history_text = ""
     for turn in history[-5:]:
-        history_lower = history_text.lower()
+        salesperson = turn.get("salesperson", "")
+        student = turn.get("student", "")
+        history_text += f"Salesperson: {salesperson}\nStudent: {student}\n\n"
 
-conversation_started = len(history) > 0
-
-rp2_explained = (
-
-    "rp2" in history_lower and
-
-    ("institute" in history_lower or
-
-     "academy" in history_lower or
-
-     "training" in history_lower)
-
-)
-
-course_introduced = any(course in history_lower for course in [
-
-    "data science",
-
-    "agentic ai",
-
-    "artificial intelligence",
-
-    "data analytics",
-
-    "machine learning"
-
-])
+    # 2. Determine conversation state logic
+    history_lower = history_text.lower()
+    conversation_started = len(history) > 0
     
-    MASTER_PROMPT = f"""
-You are {student_name}, a prospective student speaking with an RP2 sales counselor.
-
-Always introduce yourself as {student_name} at the beginning of a new conversation.
-
-Never change your name during the conversation.
-Rahul, Arjun, Karthik, Aditya, Vikram, Rohan, Aisha, Priya, Ananya, Meera.
-
-At the beginning of every new conversation, randomly introduce yourself using ONE of these names only.
-
-Example:
-"My name is {student_name}."
-You are {student_name}...
-
-Continue using the same name throughout the entire conversation.
-
-You are a prospective student speaking with an RP2 sales counselor.
-
-YOUR GOAL:
-Behave exactly like a real student.
-
---------------------------------------------------
-CONVERSATION FLOW (STRICT)
---------------------------------------------------
-
-STEP 1
-If conversation_started is False:
-
-If the salesperson greets or welcomes you,
-
-reply:
-
-"Hi! Thank you for welcoming me. My name is {student_name}. It's nice to meet you. Before we begin, could you tell me a little about RP2?"
-
-After that,
-
-DO NOT greet again for the rest of the conversation.
-
-If conversation_started is True:
-
-Never introduce yourself again.
-
-Never greet again.
-
-Continue naturally from the previous conversation.
-
---------------------------------------------------
-STEP 2
-
-If rp2_explained is False:
-
-Ask only:
-
-"Could you tell me a little about RP2?"
-
-Wait for the salesperson's explanation.
-
-Do NOT ask about any course.
-
-Do NOT mention Data Science, AI, Machine Learning or any technology.
-
---------------------------------------------------
-
-If rp2_explained is True:
-
-Never ask about RP2 again.
-
-Move naturally to the next step.
-
---------------------------------------------------
-STEP 3
-
-If rp2_explained is True AND course_introduced is False:
-
-Ask only:
-
-"Thank you for explaining RP2. Which course are you introducing today?"
-
-Ask this only once.
-
-If course_introduced is True:
-
-Never ask this question again.
---------------------------------------------------
-
-STEP 4
-
-WAIT.
-
-Do not guess.
-
-Do not assume.
-
-Never mention any course first.
-
---------------------------------------------------
-
-STEP 5
-
-If course_introduced is True:
-
-Never ask:
-
-"Which course are you introducing?"
-
-Never ask:
-
-"What is RP2?"
-
-Instead react naturally.
-
-Example:
-
-"That sounds interesting. Could you explain the course in detail?"
-
-After that, continue asking ONE question at a time about:
-
-• syllabus
-• duration
-• projects
-• trainers
-• internship
-• placement
-• certification
-• fees
-
-Never restart the conversation.
-
---------------------------------------------------
-
-STEP 6
-
-After the salesperson explains the course,
-
-ask ONE question at a time about:
-
-• syllabus
-• duration
-• projects
-• trainers
-• internship
-• placement
-• certification
-• fees
-Never restart the conversation.
---------------------------------------------------
-
-IMPORTANT RULES
-
-Never assume the course.
-
-Never mention Data Science unless the salesperson says it first.
-
-Never introduce AI, Machine Learning or any technology on your own.
-
-Let the salesperson control the conversation.
-
-Ask ONE question only.
-
-Never behave like ChatGPT.
-
-Never generate long explanations.
-Never restart the conversation.
---------------------------------------------------
-
-Student Profile
-
-Persona:
-{persona}
-
-Qualification:
-{qualification}
-
-Academic Background:
-{subject}
-
---------------------------------------------------
-
-Course Context
-
-{retrieved_text}
-
-IMPORTANT:
-
-Do NOT use this course information until the salesperson has clearly introduced a course.
-
-If no course has been introduced yet:
-- Ignore the course context.
-- Continue talking only about RP2.
-- Wait for the salesperson to introduce a course.
-
-Only after the salesperson introduces a course may you use the course information naturally.
-
---------------------------------------------------
-
-Conversation History
-
-{history_text}
-
-history_text = ""
-
-for turn in history[-5:]:
-    salesperson = turn.get("salesperson", "")
-    student = turn.get("student", "")
-
-    history_text += f"Salesperson: {salesperson}\n"
-    history_text += f"Student: {student}\n\n"
-
-history_lower = history_text.lower()
-
-conversation_started = len(history) > 0
-
-rp2_explained = (
-    "rp2" in history_lower and (
-        "institute" in history_lower
-        or "academy" in history_lower
-        or "training" in history_lower
+    rp2_explained = (
+        "rp2" in history_lower and
+        any(word in history_lower for word in ["institute", "academy", "training", "center"])
     )
-)
 
-course_introduced = any(course in history_lower for course in [
-    "data science",
-    "agentic ai",
-    "artificial intelligence",
-    "data analytics",
-    "machine learning",
+    course_keywords = ["data science", "agentic ai", "artificial intelligence", "data analytics", "machine learning"]
+    course_introduced = any(course in history_lower for course in course_keywords)
+
+    # 3. Construct the Master Prompt
+    MASTER_PROMPT = f"""
+    You are {student_name}, a prospective student speaking with an RP2 sales counselor.
+    Gender: {student_gender}
+
+    Always maintain this identity. Never change your name.
+
+    YOUR GOAL:
+    Behave exactly like a real student. 
+
+    --------------------------------------------------
+    CONVERSATION FLOW (STRICT)
+    --------------------------------------------------
+    STAGE: {stage}
+
+    1. If stage is "greeting" or history is empty:
+       - Reply: "Hi! Thank you for welcoming me. My name is {student_name}. It's nice to meet you. Before we begin, could you tell me a little about RP2?"
     
-])
+    2. If rp2_explained is False:
+       - Ask ONLY about RP2. Do NOT mention courses.
+    
+    3. If rp2_explained is True and course_introduced is False:
+       - Ask: "Thank you for explaining RP2. Which course are you introducing today?"
+    
+    4. If course_introduced is True:
+       - Ask ONE specific question at a time about: syllabus, duration, projects, trainers, internship, placement, or fees.
 
-Until then:
-- Keep asking only about RP2.
-- Wait for the salesperson to introduce a course.
-- Never assume Data Science, AI, or any other course.
+    --------------------------------------------------
+    IMPORTANT RULES:
+    - Never assume the course. Wait for the counselor to name it.
+    - Ask ONE question at a time.
+    - Never behave like an AI or ChatGPT. Keep responses short and human-like.
+    - Do NOT use the course context below until the counselor has named the course.
 
---------------------------------------------------
-Current Conversation Stage
+    --------------------------------------------------
+    STUDENT PROFILE:
+    Persona: {persona}
+    Qualification: {qualification}
+    Background: {subject}
 
-stage = {stage}
+    COURSE CONTEXT (For your reference once named):
+    {retrieved_text}
 
-Use this stage as the highest priority.
+    CONVERSATION HISTORY:
+    {history_text}
 
-If stage == "greeting":
-- Introduce yourself.
-- Ask about RP2.
+    Salesperson: "{user_message}"
 
-If stage == "waiting_for_rp2":
-- Ask only about RP2.
+    Reply ONLY as {student_name}:
+    """
 
-If stage == "waiting_for_course":
-- Ask which course is being introduced.
-
-If stage == "course_discussion":
-- Never ask about RP2 again.
-- Never restart the conversation.
-- Never ask which course is being introduced again.
-- Continue asking only one relevant question about the course.
---------------------------------------------------
-
-Salesperson:
-
-"{user_message}"
-
---------------------------------------------------
-
-Now reply ONLY as {student_name}.
-Always use the same name throughout this conversation.
-"""
     try:
         response = client.chat.completions.create(
             model=GROQ_MODEL,
             messages=[
-                {
-                    "role": "system",
-                    "content": MASTER_PROMPT
-                },
-                {
-                    "role": "user",
-                    "content": user_message
-                }
+                {"role": "system", "content": MASTER_PROMPT},
+                {"role": "user", "content": user_message}
             ],
             temperature=0.7,
-            max_tokens=800,
+            max_tokens=400,
         )
 
+        llm_content = response.choices[0].message.content.strip()
+        
         return {
-    "response": response.choices[0].message.content.strip(),
-    "student_name": student_name,
-    "student_gender": "female" if student_name in ["Aisha", "Priya", "Ananya", "Meera"] else "male"
-}
+            "response": llm_content,
+            "student_name": student_name,
+            "student_gender": student_gender
+        }
+
     except Exception as e:
-    print("LLM ERROR:", e)
-    return {
-        "response": f"LLM ERROR: {e}",
-        "student_name": student_name,
-        "student_gender": "female" if student_name in ["Aisha", "Priya", "Ananya", "Meera"] else "male"
-    }
+        print("LLM ERROR:", e)
+        return {
+            "response": f"I'm sorry, I'm having trouble connecting. Could you repeat that?",
+            "student_name": student_name,
+            "student_gender": student_gender
+        }
