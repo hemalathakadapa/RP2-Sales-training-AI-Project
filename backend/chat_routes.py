@@ -68,6 +68,7 @@ def chat(user_message: ChatRequest):
 
         # ✅ Get THIS student's history
         conversation_history = get_conversation(session_id)
+        conversation_stage = get_conversation_stage(session_id)
         print("========== HISTORY ==========")
         print(conversation_history)
         print("=============================")
@@ -80,14 +81,15 @@ def chat(user_message: ChatRequest):
             retrieved_text = top_result.get("answer", "")
 
             if USE_LLM:
-                response = get_llm_response(
-                    user_message=message,
-                    retrieved_text=f"Course: {selected_course}\n{retrieved_text}",
-                    persona=selected_persona,
-                    qualification=selected_qualification,
-                    subject=selected_subject,
-                    history=conversation_history
-                )
+                response_text = get_llm_response(
+    user_message=message,
+    retrieved_text=f"Course: {selected_course}\n{retrieved_text}",
+    persona=selected_persona,
+    qualification=selected_qualification,
+    subject=selected_subject,
+    history=conversation_history,
+    stage=conversation_stage
+)
 
                 response_text = response["response"]
                 student_name = response["student_name"]
