@@ -155,10 +155,23 @@ def get_user_sessions(user_id: int):
     cursor = conn.cursor(cursor_factory=RealDictCursor)
 
     cursor.execute("""
-        SELECT *
-        FROM sessions
-        WHERE user_id = %s
-        ORDER BY updated_at DESC
+        SELECT
+            s.session_id,
+            s.title,
+            s.created_at,
+            s.updated_at,
+            c.persona,
+            c.course
+        FROM sessions s
+        LEFT JOIN LATERAL (
+            SELECT persona, course
+            FROM conversations
+            WHERE conversations.session_id = s.session_id
+            ORDER BY id ASC
+            LIMIT 1
+        ) c ON true
+        WHERE s.user_id = %s
+        ORDER BY s.updated_at DESC
     """, (user_id,))
 
     rows = cursor.fetchall()
@@ -169,7 +182,9 @@ def get_user_sessions(user_id: int):
             "session_id": row["session_id"],
             "title": row["title"],
             "created_at": row["created_at"],
-            "updated_at": row["updated_at"]
+            "updated_at": row["updated_at"],
+            "persona": row["persona"] or "N/A",
+            "course": row["course"] or "N/A"
         }
         for row in rows
     ]
