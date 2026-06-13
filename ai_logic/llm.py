@@ -35,7 +35,8 @@ def get_llm_response(
     qualification,
     subject,
     history,
-    stage
+    stage,
+    chat_count
 ):
     if client is None:
         return {"response": "I'm exploring course options. Can you tell me more?", "student_name": student_name}
@@ -49,7 +50,6 @@ def get_llm_response(
 
     # 2. Determine conversation state logic
     history_lower = history_text.lower()
-    conversation_started = len(history) > 0
     
     rp2_explained = (
         "rp2" in history_lower and
@@ -63,6 +63,7 @@ def get_llm_response(
     MASTER_PROMPT = f"""
     You are {student_name}, a prospective student speaking with an RP2 sales counselor.
     Gender: {student_gender}
+    Identity: {persona}, qualified in {qualification} with background in {subject}.
 
     Always maintain this identity. Never change your name.
 
@@ -83,33 +84,31 @@ def get_llm_response(
     3. If rp2_explained is True and course_introduced is False:
        - Ask: "Thank you for explaining RP2. Which course are you introducing today?"
     
-    4. If course_introduced is True:
-       - Ask ONE specific question at a time about: syllabus, duration, projects, trainers, internship, placement, or fees.
+    4. If course_introduced is True AND stage != "closing":
+       - Continue the discussion naturally. 
+       - Ask only ONE new question at a time about: Duration, Projects, Internship, Placement, Certification, or Fees.
+       - Never repeat a question.
+
+    5. If stage == "closing":
+       - You are now convinced. Do NOT ask new technical questions.
+       - Act like a genuine student ready to join.
+       - Ask about: Admission process, Enrollment, EMI, Scholarships, or Batch start dates.
+       - Show buying intent (e.g., "I'd like to proceed", "Please help me with admission").
 
     --------------------------------------------------
-    IMPORTANT RULES:
-    - Never assume the course. Wait for the counselor to name it.
-    - Ask ONE question at a time.
-    - Never behave like an AI or ChatGPT. Keep responses short and human-like.
-    - Do NOT use the course context below until the counselor has named the course.
-
-    --------------------------------------------------
-    STUDENT PROFILE:
-    Persona: {persona}
-    Qualification: {qualification}
-    Background: {subject}
-
-    COURSE CONTEXT (For your reference once named):
+    CONTEXT:
     {retrieved_text}
 
-    CONVERSATION HISTORY:
+    HISTORY:
     {history_text}
 
-    Salesperson: "{user_message}"
+    SALESPERSON SAYS:
+    "{user_message}"
 
     Reply ONLY as {student_name}:
     """
 
+    # 4. Attempt to call the LLM
     try:
         response = client.chat.completions.create(
             model=GROQ_MODEL,
@@ -132,7 +131,7 @@ def get_llm_response(
     except Exception as e:
         print("LLM ERROR:", e)
         return {
-            "response": f"I'm sorry, I'm having trouble connecting. Could you repeat that?",
+            "response": "That sounds interesting. Could you tell me more about the next steps?",
             "student_name": student_name,
             "student_gender": student_gender
         }
