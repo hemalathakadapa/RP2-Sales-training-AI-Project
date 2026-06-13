@@ -191,3 +191,8 @@ def dashboard(user_id: int):
 @router.get("/course-metrics")
 def course_metrics(user_id: int):
     return {"course_metrics": get_course_metrics(user_id)}
+
+@router.get("/admin/users")
+def admin_users():
+    from database import get_all_users
+    return get_all_users()
