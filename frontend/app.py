@@ -375,7 +375,8 @@ if (st.session_state.authenticated and st.session_state.page in ["dashboard", "c
                     col1, col2 = st.columns([4, 1])
                     with col1:
                         title = s.get("title", "New Session")
-                        if st.button(title, key=f"load_{s['session_id']}"):
+                        display_title = title if len(title) <= 20 else title[:20] + "..."
+                        if st.button(title, key=f"load_{s['session_id']}", help=title):
                             history = get_session_conversation(s["session_id"], st.session_state.user_id)
                             st.session_state.messages = []
                             for turn in history:
@@ -419,14 +420,22 @@ if (st.session_state.authenticated and st.session_state.page in ["dashboard", "c
                 st.rerun()
  
         st.markdown("---")
-        if st.button("Logout"):
-            st.session_state.authenticated = False
-            st.session_state.user_name = ""
-            st.session_state.user_id = None
-            st.session_state.page = "landing"
-            st.rerun()
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("Back to Home"):
+                st.session_state.authenticated = False
+                st.session_state.user_name = ""
+                st.session_state.user_id = None
+                st.session_state.page = "landing"
+                st.rerun()
+        with col2:
+            if st.button("Logout"):
+                st.session_state.authenticated = False
+                st.session_state.user_name = ""
+                st.session_state.user_id = None
+                st.session_state.page = "landing"
+                st.rerun()
         
-    
 # ========================================================
 # LANDING PAGE
 # =========================================================
@@ -613,38 +622,45 @@ elif st.session_state.page == "admin_signup":
     with center:
         st.markdown("<h2 style='text-align:center'>Create Admin Account</h2>", unsafe_allow_html=True)
 
-        name     = st.text_input("Full Name",       key="admin_signup_name",     placeholder="John Smith")
-        email    = st.text_input("Email",            key="admin_signup_email",    placeholder="admin@example.com")
-        password = st.text_input("Password",         key="admin_signup_password", type="password")
-        confirm  = st.text_input("Confirm Password", key="admin_signup_confirm",  type="password")
-
-        col1, col2 = st.columns(2)
-        with col1:
-            if st.button("Create Account", key="btn_admin_create"):
-                if not name.strip():
-                    st.error("Full name is required.")
-                elif not email.strip():
-                    st.error("Email is required.")
-                elif "@" not in email:
-                    st.error("Invalid email address.")
-                elif not password:
-                    st.error("Password is required.")
-                elif len(password) < 6:
-                    st.error("Password must be at least 6 characters.")
-                elif password != confirm:
-                    st.error("Passwords do not match.")
-                else:
-                    result = admin_register_user(name=name, email=email, password=password)
-                    if result.get("success"):
-                        st.success("Admin account created successfully.")
-                        st.session_state.page = "admin_login"
-                        st.rerun()
-                    else:
-                        st.error(result.get("message", "Registration failed. Please try again."))
-        with col2:
-            if st.button("Back to Admin Login", key="btn_admin_signup_back"):
+        if st.session_state.get("admin_signup_done"):
+            st.success("Admin account created successfully.")
+            if st.button("Back to Admin Login", key="btn_admin_signup_done_back"):
+                st.session_state.admin_signup_done = False
                 st.session_state.page = "admin_login"
                 st.rerun()
+        else:
+            name     = st.text_input("Full Name",       key="admin_signup_name",     placeholder="John Smith")
+            email    = st.text_input("Email",            key="admin_signup_email",    placeholder="admin@example.com")
+            password = st.text_input("Password",         key="admin_signup_password", type="password")
+            confirm  = st.text_input("Confirm Password", key="admin_signup_confirm",  type="password")
+
+            col1, col2 = st.columns(2)
+            with col1:
+                if st.button("Create Account", key="btn_admin_create"):
+                    if not name.strip():
+                        st.error("Full name is required.")
+                    elif not email.strip():
+                        st.error("Email is required.")
+                    elif "@" not in email:
+                        st.error("Invalid email address.")
+                    elif not password:
+                        st.error("Password is required.")
+                    elif len(password) < 6:
+                        st.error("Password must be at least 6 characters.")
+                    elif password != confirm:
+                        st.error("Passwords do not match.")
+                    else:
+                        result = admin_register_user(name=name, email=email, password=password)
+                        if result.get("success"):
+                            st.success("Admin account created successfully.")
+                            st.session_state.page = "admin_login"
+                            st.rerun()
+                        else:
+                            st.error(result.get("message", "Registration failed. Please try again."))
+            with col2:
+                if st.button("Back to Admin Login", key="btn_admin_signup_back"):
+                    st.session_state.page = "admin_login"
+                    st.rerun()
 
 # =========================================================
 # SIGNUP PAGE
@@ -692,7 +708,7 @@ elif st.session_state.page == "signup":
                             st.error(result.get("message", "Registration failed. Please try again."))
                             
             with col2:
-                if st.button("Back to Login", key="btn_back"):
+                if st.button("Back to Home", key="btn_back"):
                     st.session_state.page = "landing"
                     st.rerun()         
  
@@ -1078,11 +1094,34 @@ elif st.session_state.page == "admin":
         if not sessions:
             st.warning("No sessions for this user.")
         else:
-            session_options = {
-                f"{s['title']} | {s['updated_at']}":
+            session_options_full = {
+                f"{s['title']} | {s.get('persona', 'N/A')} | {s.get('course', 'N/A')} | {s['updated_at']}":
                 s["session_id"]
                 for s in sessions
             }
+
+            col_p, col_c = st.columns(2)
+            with col_p:
+                personas = sorted(set(s.get("persona", "N/A") for s in sessions))
+                selected_persona = st.selectbox("Filter by Persona", ["All"] + personas)
+            with col_c:
+                courses = sorted(set(s.get("course", "N/A") for s in sessions))
+                selected_course = st.selectbox("Filter by Course", ["All"] + courses)
+
+            filtered_sessions = sessions
+            if selected_persona != "All":
+                filtered_sessions = [s for s in filtered_sessions if s.get("persona", "N/A") == selected_persona]
+            if selected_course != "All":
+                filtered_sessions = [s for s in filtered_sessions if s.get("course", "N/A") == selected_course]
+                
+            if not filtered_sessions:
+                st.warning("No sessions match the selected filters.")
+            else:
+                session_options = {
+                    f"{s['title']} | {s.get('persona', 'N/A')} | {s.get('course', 'N/A')} | {s['updated_at']}":
+                    s["session_id"]
+                    for s in filtered_sessions
+                }    
 
             selected_session_label = st.selectbox("Select Session", list(session_options.keys()))
             selected_session_id = session_options[selected_session_label]
@@ -1145,12 +1184,24 @@ elif st.session_state.page == "admin":
 
     st.markdown("---")
 
-    if st.button("Admin Logout", use_container_width=True):
-        st.session_state.logged_in = False
-        st.session_state.role = None
-        st.session_state.user_id = None
-        st.session_state.username = None
-        if "admin_history" in st.session_state:
-            del st.session_state.admin_history
-        st.session_state.page = "landing"
-        st.rerun()
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("Back to Home", use_container_width=True):
+            st.session_state.logged_in = False
+            st.session_state.role = None
+            st.session_state.user_id = None
+            st.session_state.username = None
+            if "admin_history" in st.session_state:
+                del st.session_state.admin_history
+            st.session_state.page = "landing"
+            st.rerun()
+    with col2:
+        if st.button("Admin Logout", use_container_width=True):
+            st.session_state.logged_in = False
+            st.session_state.role = None
+            st.session_state.user_id = None
+            st.session_state.username = None
+            if "admin_history" in st.session_state:
+                del st.session_state.admin_history
+            st.session_state.page = "landing"
+            st.rerun()
