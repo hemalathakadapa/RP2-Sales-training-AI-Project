@@ -90,8 +90,12 @@ section[data-testid="stSidebar"] * {
 }
 
 /* ── SIDEBAR CHAT HISTORY BUTTONS ── */
-section[data-testid="stSidebar"] .stButton > button {
+section[data-testid="stSidebar"] .stButton > button,
+section[data-testid="stSidebar"] .stButton > button:hover,
+section[data-testid="stSidebar"] .stButton > button:focus,
+section[data-testid="stSidebar"] .stButton > button:active {
     background: transparent !important;
+    background-image: none !important;
     color: white !important;
     border: 1px solid rgba(255,255,255,0.15) !important;
     font-weight: 400 !important;
@@ -99,13 +103,14 @@ section[data-testid="stSidebar"] .stButton > button {
     justify-content: flex-start !important;
     padding: 0.4rem 0.6rem !important;
     font-size: 13px !important;
-    font-weight: 400 !important;
+    box-shadow: none !important;
+    transform: none !important;
 }
 }
 section[data-testid="stSidebar"] .stButton > button:hover {
     background: rgba(255,255,255,0.08) !important;
+    background-image: none !important;
     border-color: rgba(255,255,255,0.3) !important;
-    transform: none !important;
 }
 
 /* ── SIDEBAR ⋮ POPOVER BUTTON ── */
@@ -407,9 +412,12 @@ if (st.session_state.authenticated and st.session_state.page in ["dashboard", "c
                             if st.button("Save", key=f"save_{s['session_id']}", use_container_width=True):
                                 try:
                                     rename_chat_session(s["session_id"], new_name)
+                                    st.session_state[f"popover_open_{s['session_id']}"] = False
                                     st.rerun()
                                 except Exception as e:
                                     st.error(f"Rename Error: {e}")
+                            if st.button("Cancel", key=f"cancel_{s['session_id']}", use_container_width=True):
+                                st.rerun()
                         
             else:
                 st.info("No chats yet.")
