@@ -948,11 +948,6 @@ elif st.session_state.page == "chat":
             icon_size="2x",
             key=f"mic_{st.session_state.mic_key}"
         )
-    with col_label:
-        st.markdown(
-            "<p style='color:rgba(255,255,255,0.75); font-size:14px; margin-top:18px;'>Click to record</p>",
-            unsafe_allow_html=True
-        )
    
     audio_text = None
     if audio_bytes and len(audio_bytes) > 1000:
