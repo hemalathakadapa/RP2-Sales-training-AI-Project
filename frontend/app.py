@@ -148,39 +148,6 @@ section[data-testid="stSidebar"] [data-testid="stPopover"] button {
     box-shadow: none !important;
 }
 
-/* ── POPOVER MENU STYLING ── */
-[data-testid="stPopover"] > div {
-    background-color: #1a2535 !important;
-    border: 1px solid rgba(255,255,255,0.15) !important;
-    border-radius: 12px !important;
-    padding: 8px !important;
-    min-width: 200px !important;
-}
-[data-testid="stPopover"] .stTextInput > div > div > input {
-    background-color: rgba(255,255,255,0.08) !important;
-    color: white !important;
-    border: 1px solid rgba(255,255,255,0.2) !important;
-    border-radius: 8px !important;
-    font-size: 13px !important;
-}
-[data-testid="stPopover"] .stButton > button {
-    background-color: rgba(255,255,255,0.06) !important;
-    background-image: none !important;
-    color: white !important;
-    border: 1px solid rgba(255,255,255,0.12) !important;
-    border-radius: 8px !important;
-    font-size: 13px !important;
-    font-weight: 400 !important;
-    text-align: left !important;
-    justify-content: flex-start !important;
-    padding: 6px 10px !important;
-    margin-bottom: 4px !important;
-}
-[data-testid="stPopover"] .stButton > button:hover {
-    background-color: rgba(255,255,255,0.12) !important;
-    border-color: rgba(255,255,255,0.25) !important;
-}
-
 /* ── GLOBAL TEXT ── */
 .stApp h1, .stApp h2, .stApp h3,
 .stApp h4, .stApp h5, .stApp h6 { color: white !important; }
@@ -449,28 +416,22 @@ if (st.session_state.authenticated and st.session_state.page in ["dashboard", "c
                             st.session_state.session_id = s["session_id"]
                             st.session_state.page = "chat"
                             st.rerun()
-
                     with c2:
                         with st.popover("⋮", use_container_width=True):
-                            st.markdown(
-                                f"<div style='font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:8px;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.1);'>{display_title}</div>",
-                                unsafe_allow_html=True
-                            )
                             new_name = st.text_input(
-                                "Rename",
+                                "New name",
                                 value=title,
-                                key=f"rename_input_{s['session_id']}",
-                                label_visibility="collapsed",
-                                placeholder="Enter new name..."
+                                key=f"rename_input_{s['session_id']}"
                             )
                             if st.button("Save", key=f"save_{s['session_id']}", use_container_width=True):
                                 try:
                                     rename_chat_session(s["session_id"], new_name)
+                                    st.session_state[f"popover_open_{s['session_id']}"] = False
                                     st.rerun()
                                 except Exception as e:
                                     st.error(f"Rename Error: {e}")
                             if st.button("Cancel", key=f"cancel_{s['session_id']}", use_container_width=True):
-                                st.rerun()
+                                st.rerun()           
             else:
                 st.info("No chats yet.")
         except Exception as e:
