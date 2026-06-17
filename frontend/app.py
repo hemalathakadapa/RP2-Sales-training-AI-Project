@@ -937,7 +937,7 @@ elif st.session_state.page == "chat":
     </style>
     """, unsafe_allow_html=True)
 
-    col_mic, col_label, col_spacer = st.columns([0.5, 2, 8])
+    col_mic, col_label, col_spacer = st.columns([0.5, 10])
     with col_mic:
         audio_bytes = audio_recorder(
             pause_threshold=2.5,
