@@ -1,39 +1,3 @@
-from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
-from b_config import USE_LLM
-from database import (create_session, get_user_dashboard, get_course_metrics)
-import random
-import string
-from ai_logic.chat_stage import (
-    should_start_closing,
-    CLOSING
-)
-
-def generate_session_id():
-    chars = string.ascii_uppercase + string.digits
-    code = "".join(random.choices(chars, k=5))
-    return f"RP2-{code}"
-
-router = APIRouter()
-
-class ChatRequest(BaseModel):
-    message: str
-    persona: str = ""
-    course: str = ""
-    qualification: str = ""
-    subject: str = ""
-    session_id: str = ""
-    user_id: int = None
-
-def fallback_response(user_input, course, rag_text=None):
-    if rag_text:
-        return f"{rag_text} (Let me know if you want more details!)"
-    return (
-        f"Thanks for your question about the {course} course! "
-        "This program covers everything step-by-step with practical examples. "
-        "Would you like to know about syllabus, tools, or career opportunities?"
-    )
-
 @router.post("/")
 def chat(user_message: ChatRequest):
     try:
@@ -71,8 +35,16 @@ def chat(user_message: ChatRequest):
 
         # 3. History and Stage logic
         conversation_history = get_conversation(session_id)
-        chat_count = len(conversation_history)
         conversation_stage = get_conversation_stage(session_id)
+        chat_count = len(conversation_history)
+
+        # ✅ FIXED: Correctly indented "finished" check
+        if conversation_stage == "finished":
+            return {
+                "response": "This practice session has ended successfully. Please start a new chat to practice again.",
+                "session_id": session_id,
+                "conversation_finished": True
+            }
 
         # Automatically switch to closing stage if threshold met
         if should_start_closing(chat_count) and conversation_stage != CLOSING:
@@ -141,23 +113,25 @@ def chat(user_message: ChatRequest):
                 update_conversation_stage(session_id, "course_discussion")
 
         elif conversation_stage == "closing":
-            salesperson_lower = message.lower()
-            admission_keywords = [
-                "admission", "enroll", "enrol", "registration", "register",
-                "payment", "fees", "fee payment", "emi", "batch starts",
-                "seat", "join now", "application form"
-            ]
-            if any(word in salesperson_lower for word in admission_keywords):
-                update_conversation_stage(session_id, "finished")
+    admission_keywords = [
+        "admission", "enroll", "enrol", "registration", "register",
+        "payment", "fees", "fee payment", "emi", "batch starts",
+        "seat", "join now", "application form",
+        "confirm my seat", "book my seat"
+    ]
+
+    if any(word in message.lower() for word in admission_keywords):
+        update_conversation_stage(session_id, FINISHED)
+        conversation_stage = FINISHED
 
         # 8. Generate voice
-        # Corrected indentation for multiline function call
         audio_file = convert_text_to_speech(
             text=response_text,
             gender=student_gender
         )
         audio_url = f"/voice/audio/{audio_file}" if audio_file else None
 
+        # ✅ FIXED: Ensure the return is outside the "if" logic but inside the "try" block
         return {
             "response": response_text,
             "audio_url": audio_url,
@@ -170,33 +144,3 @@ def chat(user_message: ChatRequest):
     except Exception as e:
         print("Error:", e)
         return {"error": f"Something went wrong: {str(e)}"}
-
-# --- Remaining endpoints ---
-@router.get("/history/{session_id}")
-def get_chat_history(session_id: str, user_id: int):
-    try:
-        from database import (get_conversation, session_belongs_to_user)
-        if not session_belongs_to_user(session_id, user_id):
-            raise HTTPException(status_code=403, detail="Access denied")
-        history = get_conversation(session_id=session_id, limit=999)
-        return {"session_id": session_id, "history": history}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@router.get("/sessions")
-def get_sessions(user_id: int):
-    from database import get_user_sessions
-    return get_user_sessions(user_id)
-
-@router.get("/dashboard")
-def dashboard(user_id: int):
-    return get_user_dashboard(user_id)
-
-@router.get("/course-metrics")
-def course_metrics(user_id: int):
-    return {"course_metrics": get_course_metrics(user_id)}
-
-@router.get("/admin/users")
-def admin_users():
-    from database import get_all_users
-    return get_all_users()
