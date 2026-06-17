@@ -917,21 +917,27 @@ elif st.session_state.page == "chat":
 
     # INPUTS
     prompt = st.text_input("Type your pitch:", key="text_input")
-    st.markdown(
-        "<p style='color:white; font-size:14px; font-weight:600; margin-bottom:4px;'>🎙️ Voice Input</p>",
-        unsafe_allow_html=True
-    )
     st.markdown("""
     <style>
-    div[data-testid="stCustomComponentV1"] iframe {
+    /* Make the recorder iframe blend into the dark background */
+    div[data-testid="stCustomComponentV1"] > iframe {
+        background-color: transparent !important;
+        color-scheme: dark !important;
+        border: none !important;
+        outline: none !important;
+        width: 60px !important;
+        min-height: 60px !important;
+        height: 60px !important;
+        overflow: hidden !important;
+    }
+    div[data-testid="stCustomComponentV1"] {
         background: transparent !important;
         border: none !important;
-        height: 60px !important;
     }
     </style>
     """, unsafe_allow_html=True)
 
-    col_mic, col_spacer = st.columns([1, 5])
+    col_mic, col_label, col_spacer = st.columns([0.5, 2, 8])
     with col_mic:
         audio_bytes = audio_recorder(
             pause_threshold=2.5,
@@ -941,6 +947,11 @@ elif st.session_state.page == "chat":
             icon_name="microphone",
             icon_size="2x",
             key=f"mic_{st.session_state.mic_key}"
+        )
+    with col_label:
+        st.markdown(
+            "<p style='color:rgba(255,255,255,0.75); font-size:14px; margin-top:18px;'>Click to record</p>",
+            unsafe_allow_html=True
         )
    
     audio_text = None
