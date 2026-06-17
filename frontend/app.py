@@ -255,6 +255,15 @@ div[data-testid="column"]:nth-of-type(2) h3 { color: #111111 !important; }
 </style>
 """, unsafe_allow_html=True)
 
+st.markdown("""
+    <style>
+        /* Hide Streamlit footer and main menu */
+        #MainMenu {visibility: hidden;}
+        footer {visibility: hidden;}
+        header {visibility: hidden;}
+    </style>
+""", unsafe_allow_html=True)
+
 # SESSION STATE
 # =========================================================
 defaults = {
