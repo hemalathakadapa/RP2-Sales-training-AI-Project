@@ -257,7 +257,14 @@ div[data-testid="column"]:nth-of-type(2) h3 { color: #111111 !important; }
  #MainMenu {visibility: hidden;}
 footer {visibility: hidden;}
 header {visibility: hidden;}
-        
+
+<div style="display:flex; align-items:center; gap:12px;
+    background:rgba(255,255,255,0.05);
+    border:1.5px solid rgba(255,255,255,0.15);
+    border-radius:10px; padding:10px 16px; margin-bottom:8px;">
+    <span style="color:rgba(255,255,255,0.75); font-size:14px;">🎙️ Voice input</span>
+</div>
+
 </style>
 """, unsafe_allow_html=True)
 
