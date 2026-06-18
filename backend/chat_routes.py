@@ -29,8 +29,8 @@ class ChatRequest(BaseModel):
     user_id: int = None
 
 def create_session(session_id, title, user_id):
-    from database import create_new_session
-    create_new_session(session_id, title, user_id)
+    from database import create_session as db_create_session
+    db_create_session(session_id, title, user_id)
 
 def should_start_closing(chat_count):
     return chat_count >= CLOSING_THRESHOLD
