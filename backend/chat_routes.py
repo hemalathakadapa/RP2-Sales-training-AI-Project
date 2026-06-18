@@ -1,8 +1,16 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
-from typing import Optional
-import uuid
+from b_config import USE_LLM
+from database import (create_session, get_user_dashboard, get_course_metrics)
+from fastapi import HTTPException
+import random
+import string
 
+def generate_session_id():
+    chars = string.ascii_uppercase + string.digits
+    code = "".join(random.choices(chars, k=5))
+    return f"RP2-{code}"
+    
 router = APIRouter()
 
 # Constants
@@ -13,26 +21,19 @@ CLOSING_THRESHOLD = 10  # adjust if needed
 
 class ChatRequest(BaseModel):
     message: str
-    persona: Optional[str] = "Beginner"
-    course: Optional[str] = ""
-    qualification: Optional[str] = ""
-    subject: Optional[str] = ""
-    session_id: Optional[str] = None
-    user_id: Optional[int] = None
-
-
-def generate_session_id():
-    return str(uuid.uuid4())
-
+    persona: str = ""
+    course: str = ""
+    qualification: str = ""
+    subject: str = ""
+    session_id: str = ""
+    user_id: int = None
 
 def create_session(session_id, title, user_id):
     from database import create_new_session
     create_new_session(session_id, title, user_id)
 
-
 def should_start_closing(chat_count):
     return chat_count >= CLOSING_THRESHOLD
-
 
 def fallback_response(message, course, retrieved_text):
     return f"Based on {course}: {retrieved_text}"
@@ -184,13 +185,72 @@ def chat(user_message: ChatRequest):
         print("Error:", e)
         return {"error": f"Something went wrong: {str(e)}"}
 
+@router.get("/history/{session_id}")
+def get_chat_history(session_id: str, user_id: int):
+    try:
+        from database import (
+            get_conversation,
+            session_belongs_to_user
+        )
+
+        if not session_belongs_to_user(session_id, user_id):
+            raise HTTPException(
+                status_code=403,
+                detail="Access denied"
+            )
+
+        history = get_conversation(
+            session_id=session_id,
+            limit=999
+        )
+
+        return {
+            "session_id": session_id,
+            "history": history
+        }
+
+    except HTTPException:
+        raise
+
+    except Exception as e:
+        print("History Error:", e)
+        raise HTTPException(
+            status_code=500,
+            detail="Could not fetch history"
+        )
+
+
 @router.get("/sessions")
 def get_sessions(user_id: int):
     from database import get_user_sessions
     return get_user_sessions(user_id)
 
 
+@router.get("/admin/users")
+def admin_users():
+    from database import get_all_users
+    return get_all_users()
+
+
+@router.get("/admin/user-sessions")
+def admin_user_sessions(user_id: int):
+    from database import get_user_sessions
+    return get_user_sessions(user_id)
+
+
+@router.get("/admin/history/{session_id}")
+def admin_history(session_id: str):
+    from database import get_conversation
+    history = get_conversation(session_id=session_id, limit=999)
+    return {"session_id": session_id, "history": history}
+
+
 @router.get("/dashboard")
-def get_dashboard(user_id: int):
-    from database import get_user_dashboard
-    return get_user_dashboard(user_id)
+def dashboard(user_id: int):
+    dashboard_data = get_user_dashboard(user_id)
+    return dashboard_data
+
+
+@router.get("/course-metrics")
+def course_metrics(user_id: int):
+    return {"course_metrics": get_course_metrics(user_id)}
