@@ -87,7 +87,7 @@ def create_tables():
     except Exception:
         conn.rollback()
 
-    f    for col in ["qualification", "subject"]:
+    for col in ["qualification", "subject"]:
         try:
             cursor.execute(f"ALTER TABLE conversations ADD COLUMN {col} TEXT DEFAULT ''")
             conn.commit()
