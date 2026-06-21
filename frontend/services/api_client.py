@@ -105,3 +105,17 @@ def get_course_metrics(user_id: int):
     response = requests.get(f"{BACKEND_URL}/chat/course-metrics", params={"user_id": user_id})
     response.raise_for_status()
     return response.json()["course_metrics"]
+
+def rename_chat_session(session_id: str, new_title: str):
+    response = requests.patch(
+        f"{BACKEND_URL}/chat/sessions/{session_id}/rename",
+        json={"title": new_title}
+    )
+    return response.json()
+
+def delete_chat_session(session_id: str, user_id: int):
+    response = requests.delete(
+        f"{BACKEND_URL}/chat/sessions/{session_id}",
+        params={"user_id": user_id}
+    )
+    return response.json()
