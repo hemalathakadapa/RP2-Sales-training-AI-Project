@@ -426,7 +426,7 @@ if (st.session_state.authenticated and st.session_state.page in ["dashboard", "c
                     with c2:
                         with st.popover("⋮", use_container_width=True):
                             new_name = st.text_input(
-                                "New name",
+                                "Rename",
                                 value=title,
                                 key=f"rename_input_{s['session_id']}"
                             )
@@ -437,8 +437,34 @@ if (st.session_state.authenticated and st.session_state.page in ["dashboard", "c
                                     st.rerun()
                                 except Exception as e:
                                     st.error(f"Rename Error: {e}")
-                            if st.button("Cancel", key=f"cancel_{s['session_id']}", use_container_width=True):
-                                st.rerun()           
+                                    
+                            st.markdown("---")
+
+                            # confirm state per session
+                            confirm_key = f"confirm_delete_{s['session_id']}"
+                            if not st.session_state.get(confirm_key):
+                                if st.button("Delete", key=f"delete_{s['session_id']}", use_container_width=True):
+                                    st.session_state[confirm_key] = True
+                                    st.rerun()
+                            else:
+                                st.warning("Delete this chat?")
+                                col_y, col_n = st.columns(2)
+                                with col_y:
+                                    if st.button("Yes", key=f"yes_{s['session_id']}", use_container_width=True):
+                                        try:
+                                            delete_chat_session(s["session_id"], st.session_state.user_id)
+                                            st.session_state[confirm_key] = False
+                                            if st.session_state.session_id == s["session_id"]:
+                                                st.session_state.messages = []
+                                                st.session_state.session_id = ""
+                                            st.rerun()
+                                        except Exception as e:
+                                            st.error(f"Delete Error: {e}")
+                                with col_n:
+                                    if st.button("No", key=f"no_{s['session_id']}", use_container_width=True):
+                                        st.session_state[confirm_key] = False
+                                        st.rerun()
+
             else:
                 st.info("No chats yet.")
         except Exception as e:
