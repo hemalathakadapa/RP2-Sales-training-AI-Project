@@ -176,7 +176,7 @@ def get_user_sessions(user_id: int):
             c.persona,
             c.course
         FROM sessions s
-        LEFT JOIN LATERAL (
+        JOIN LATERAL (
             SELECT persona, course
             FROM conversations
             WHERE conversations.session_id = s.session_id
