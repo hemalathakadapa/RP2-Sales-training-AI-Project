@@ -453,11 +453,13 @@ def get_user_dashboard(user_id: int):
     cursor.execute("""
         SELECT 
             s.session_id,
-            f.final_score
+            AVG(f.final_score) AS final_score
         FROM feedback f
         JOIN sessions s ON f.session_id = s.session_id
         WHERE s.user_id = %s
-        ORDER BY f.timestamp ASC
+          AND f.final_score IS NOT NULL
+        GROUP BY s.session_id
+        ORDER BY MAX(f.timestamp) ASC
     """, (user_id,))
 
     rows = cursor.fetchall()
