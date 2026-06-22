@@ -497,16 +497,16 @@ def get_course_metrics(user_id: int):
             COUNT(DISTINCT s.session_id) AS total_sessions,
             ROUND(AVG(f.final_score)::numeric, 1) AS avg_score
         FROM sessions s
+        JOIN feedback f ON f.session_id = s.session_id
         JOIN LATERAL (
             SELECT course FROM conversations
             WHERE conversations.session_id = s.session_id
-            AND c.course != ''
+            AND conversations.course != ''
             ORDER BY id ASC
             LIMIT 1
-        ) first_c ON true
-        LEFT JOIN feedback f ON s.session_id = f.session_id
+        ) first_conv ON true
         WHERE s.user_id = %s
-        GROUP BY first_c.course
+        GROUP BY first_conv.course
         ORDER BY total_sessions DESC
     """, (user_id,))
 
