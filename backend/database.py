@@ -21,8 +21,20 @@ def create_tables():
     conn = create_connection()
     cursor = conn.cursor(cursor_factory=RealDictCursor)
     
+    # ✅ USERS TABLE
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS users (
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL,
+        email TEXT UNIQUE NOT NULL,
+        password TEXT NOT NULL,
+        created_at TEXT
+    )
+    """)
+
+    # ✅ ADMINS TABLE (WAS MISSING!)
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS admins (
         id SERIAL PRIMARY KEY,
         name TEXT NOT NULL,
         email TEXT UNIQUE NOT NULL,
@@ -73,6 +85,7 @@ def create_tables():
 
     conn.commit()
 
+    # ✅ MIGRATIONS - Add missing columns if they don't exist
     try:
         cursor.execute("ALTER TABLE sessions ADD COLUMN user_id INTEGER")
         conn.commit()
@@ -111,6 +124,7 @@ def create_tables():
 
     conn.close()
     print("✅ Database tables ready")
+
 def create_session(session_id: str, title: str, user_id: int):
     conn = create_connection()
     cursor = conn.cursor(cursor_factory=RealDictCursor)
@@ -201,7 +215,6 @@ def get_user_sessions(user_id: int):
         }
         for row in rows
     ]
-                                                                                                                                                                                                                                                                                                                                                                                                                                                       
 
 def get_conversation(session_id: str, limit: int = 999):
     """Get last N conversation turns"""
@@ -627,6 +640,7 @@ def update_conversation_stage(session_id: str, stage: str):
 
     conn.commit()
     conn.close()
+
 def save_student_identity(session_id: str, student_name: str, student_gender: str):
     conn = create_connection()
     cursor = conn.cursor(cursor_factory=RealDictCursor)
