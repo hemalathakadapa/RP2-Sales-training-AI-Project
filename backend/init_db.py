@@ -3,11 +3,18 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 from dotenv import load_dotenv
 
-load_dotenv()
+# ✅ EXPLICITLY load .env from current directory
+load_dotenv(dotenv_path=".env")
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 
+# ✅ DEBUG: Print to verify it loaded
+print(f"🔍 DATABASE_URL loaded: {DATABASE_URL[:50]}..." if DATABASE_URL else "❌ DATABASE_URL not found!")
+
 def create_tables():
+    if not DATABASE_URL:
+        raise ValueError("❌ DATABASE_URL environment variable not set!")
+    
     conn = psycopg2.connect(DATABASE_URL)
     cursor = conn.cursor()
 
